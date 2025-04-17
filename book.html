@@ -1,0 +1,243 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>egon.td</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: black;
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+
+    #header {
+      background-color: black;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .title a {
+      color: #FFF073;
+      text-decoration: none;
+    }
+
+    .content-container {
+      border: 1px solid grey;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    #reading-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    #reading-list li {
+      margin-bottom: 10px;
+    }
+
+    #reading-list a {
+      color: #86D7FF;
+      text-decoration: none;
+    }
+
+    #reading-list a:hover {
+      color: #FFF073;
+    }
+
+    #reading-list .author {
+      color: white;
+      font-style: italic;
+      margin-left: 8px;
+    }
+
+    #add-book-form {
+      margin-top: 20px;
+      display: none;
+    }
+
+    #add-book-form input {
+      padding: 8px;
+      margin: 5px 5px 5px 0;
+      border: none;
+    }
+
+    #add-book-form button {
+      padding: 8px 12px;
+      background-color: #FFF073;
+      color: black;
+      border: none;
+      cursor: pointer;
+    }
+
+    #add-book-form button:hover {
+      background-color: #ffe600;
+    }
+
+    #admin-login {
+      margin-bottom: 20px;
+    }
+
+    #admin-login input {
+      padding: 6px;
+      margin-right: 10px;
+      border: none;
+    }
+
+    #admin-login button {
+      padding: 6px 10px;
+      background-color: #FFF073;
+      color: black;
+      border: none;
+      cursor: pointer;
+    }
+
+    #admin-login button:hover {
+      background-color: #ffe600;
+    }
+
+    .delete-btn {
+      margin-left: 10px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: red;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="header">
+      <h1 class="title"><a href="https://egontd.github.io/egontd/egontd.html">egon.td</a></h1>
+    </div>
+
+    <div class="content-container">
+      <h1>reading list—————</h1>
+   
+<!-- Password Prompt -->
+<div id="password-form">
+  <label for="password">Enter Admin Password:</label>
+  <input type="password" id="password" />
+  <button onclick="authenticate()">Submit</button>
+  <p id="error-message" style="color: red; display: none;">Incorrect password</p>
+</div>
+
+<!-- Form should be hidden by default -->
+<form id="add-book-form" style="display: none;">
+  <input type="text" id="book-title" placeholder="Title" required />
+  <input type="text" id="book-author" placeholder="Author" required />
+  <input type="url" id="book-url" placeholder="URL" required />
+  <button type="submit">Add Book</button>
+</form>
+   
+
+      <!-- Reading list -->
+      <ul id="reading-list"></ul>
+
+      <!-- Add Book Form (hidden until authenticated) -->
+      <form id="add-book-form">
+        <input type="text" id="book-title" placeholder="Title" required />
+        <input type="text" id="book-author" placeholder="Author" required />
+        <input type="url" id="book-url" placeholder="URL" required />
+        <button type="submit">Add Book</button>
+      </form>
+    </div>
+  </div>
+
+ <script>
+  const correctPassword = "Connect1@"; // Change this to your admin password
+  let isAdmin = false;
+
+  // Always load books
+  let mediaItems = JSON.parse(localStorage.getItem("bookItems")) || [];
+
+  function populateList() {
+    const list = document.getElementById("reading-list");
+    list.innerHTML = '';
+
+    mediaItems.forEach((item, index) => {
+      const li = document.createElement("li");
+
+      const link = document.createElement("a");
+      link.href = item.url;
+      link.textContent = item.title;
+      link.target = "_blank";
+
+      const authorSpan = document.createElement("span");
+      authorSpan.className = "author";
+      authorSpan.textContent = ` - ${item.author}`;
+
+      li.appendChild(link);
+      li.appendChild(authorSpan);
+
+      if (isAdmin) {
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "🗑️";
+        deleteBtn.style.marginLeft = "10px";
+        deleteBtn.style.cursor = "pointer";
+        deleteBtn.style.background = "none";
+        deleteBtn.style.border = "none";
+        deleteBtn.style.color = "red";
+        deleteBtn.style.fontSize = "16px";
+
+        deleteBtn.addEventListener("click", () => {
+          mediaItems.splice(index, 1);
+          localStorage.setItem("bookItems", JSON.stringify(mediaItems));
+          populateList();
+        });
+
+        li.appendChild(deleteBtn);
+      }
+
+      list.appendChild(li);
+    });
+  }
+
+  function addBook(event) {
+    event.preventDefault();
+    const title = document.getElementById("book-title").value;
+    const author = document.getElementById("book-author").value;
+    const url = document.getElementById("book-url").value;
+
+    if (title && author && url) {
+      mediaItems.push({ title, author, url });
+      localStorage.setItem("bookItems", JSON.stringify(mediaItems));
+
+      document.getElementById("book-title").value = '';
+      document.getElementById("book-author").value = '';
+      document.getElementById("book-url").value = '';
+
+      populateList();
+    }
+  }
+
+  function authenticate() {
+    const inputPassword = document.getElementById("password").value;
+    if (inputPassword === correctPassword) {
+      isAdmin = true;
+      document.getElementById("password-form").style.display = "none";
+      document.getElementById("add-book-form").style.display = "block";
+      populateList();
+    } else {
+      document.getElementById("error-message").style.display = "block";
+    }
+  }
+
+  document.getElementById("add-book-form").addEventListener("submit", addBook);
+  window.onload = populateList;
+</script>
+
+</body>
+</html>
+
