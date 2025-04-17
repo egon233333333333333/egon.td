@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expanded Digital Media List</title>
+</head>
+<body>
+<body style="background-color:powderblue;">
+
+  <h2>My Curated Media Favs</h2>
+
+  <!-- Password form to unlock the "favorite" functionality -->
+  <div id="password-form">
+    <label for="password">Enter Password (admin only):</label>
+    <input type="password" id="password" required />
+    <button onclick="authenticate()">Submit</button>
+    <p id="error-message" style="color: red; display: none;">Incorrect password. Please try again.</p>
+  </div>
+
+  <!-- Form to add a new item -->
+  <form id="add-media-form" style="display: none;">
+    <input type="text" id="media-title" placeholder="Enter title" required />
+    <input type="url" id="media-url" placeholder="Enter URL" required />
+    <input type="text" id="media-category" placeholder="Enter category (optional)"/>
+    <button type="submit">Add Media</button>
+  </form>
+
+  <ul id="reading-list"></ul>
+
+  <script>
+    const correctPassword = "Connect1@";
+
+    let mediaItems = JSON.parse(localStorage.getItem("mediaItems")) || [
+      { title: "PORTLAND, Maine: Gloomy, Grey & Beautiful", url: "https://youtu.be/uSHrpVmqkWQ?si=Ef-7xRbkA5TEfAlk", isFavorite: false, category: "video" },
+      { title: "The NEET Revolution: Why NEETs Will Change the World", url: "https://www.countere.com/home/the-neet-revolution-why-neets-will-change-world", isFavorite: false, category: "article" },
+      { title: "Suicide Forums in a Dying Society", url: "https://www.countere.com/home/sanctioned-suicide-incel-forum-dying-society?utm_source=pocket_reader", isFavorite: false, category: "essay" }
+    ];
+
+    function populateList() {
+      const list = document.getElementById("reading-list");
+      list.innerHTML = "";
+
+      mediaItems.forEach((item, index) => {
+        const listItem = document.createElement("li");
+
+        const link = document.createElement("a");
+        link.href = item.url;
+        link.textContent = item.title;
+        link.target = "_blank";
+        listItem.appendChild(link);
+
+        // Add category display
+        if (item.category) {
+          const cat = document.createElement("span");
+          cat.textContent = ` [${item.category}]`;
+          cat.style.color = "gray";
+          cat.style.marginLeft = "6px";
+          listItem.appendChild(cat);
+        }
+
+        if (window.isAuthenticated) {
+          // Favorite button
+          const favoriteBtn = document.createElement("button");
+          favoriteBtn.textContent = item.isFavorite ? "? Unfavorite" : "? Favorite";
+          favoriteBtn.style.marginLeft = "10px";
+          favoriteBtn.addEventListener("click", () => {
+            item.isFavorite = !item.isFavorite;
+            localStorage.setItem("mediaItems", JSON.stringify(mediaItems));
+            populateList();
+          });
+          listItem.appendChild(favoriteBtn);
+
+          // Category edit button
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "? Edit Category";
+          editBtn.style.marginLeft = "6px";
+          editBtn.addEventListener("click", () => {
+            const newCat = prompt("Enter new category:", item.category || "");
+            if (newCat !== null) {
+              item.category = newCat.trim();
+              localStorage.setItem("mediaItems", JSON.stringify(mediaItems));
+              populateList();
+            }
+          });
+          listItem.appendChild(editBtn);
+
+          // Delete button
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "??? Delete";
+          deleteBtn.style.marginLeft = "6px";
+          deleteBtn.style.color = "red";
+          deleteBtn.addEventListener("click", () => {
+            mediaItems.splice(index, 1); // Remove item from the array
+            localStorage.setItem("mediaItems", JSON.stringify(mediaItems)); // Update localStorage
+            populateList(); // Re-render the list
+          });
+          listItem.appendChild(deleteBtn);
+
+          // Highlight favorite
+          if (item.isFavorite) {
+            listItem.style.backgroundColor = "#FFFF99";
+          }
+        }
+
+        list.appendChild(listItem);
+      });
+    }
+
+    function addMedia(event) {
+      event.preventDefault();
+      const title = document.getElementById("media-title").value;
+      const url = document.getElementById("media-url").value;
+      const category = document.getElementById("media-category").value.trim();
+
+      if (title && url) {
+        mediaItems.push({ title, url, isFavorite: false, category });
+        localStorage.setItem("mediaItems", JSON.stringify(mediaItems));
+
+        document.getElementById("media-title").value = "";
+        document.getElementById("media-url").value = "";
+        document.getElementById("media-category").value = "";
+
+        populateList();
+      } else {
+        alert("Please fill out both the title and URL.");
+      }
+    }
+
+    function authenticate() {
+      const passwordInput = document.getElementById("password").value;
+
+      if (passwordInput === correctPassword) {
+        window.isAuthenticated = true;
+        document.getElementById("add-media-form").style.display = "block";
+        document.getElementById("password-form").style.display = "none";
+        populateList();
+      } else {
+        document.getElementById("error-message").style.display = "block";
+      }
+    }
+
+    document.getElementById("add-media-form").addEventListener("submit", addMedia);
+
+    window.onload = populateList;
+  </script>
+</body>
+</html>
