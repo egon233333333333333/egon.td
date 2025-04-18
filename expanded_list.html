@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expanded Digital Media List</title>
+</head>
+<body style="background-color:powderblue;">
+
+  <h2>My Curated Media Favs</h2>
+
+  <!-- Password form to unlock the "favorite" functionality -->
+  <div id="password-form">
+    <label for="password">Enter Password (admin only):</label>
+    <input type="password" id="password" required />
+    <button onclick="authenticate()">Submit</button>
+    <p id="error-message" style="color: red; display: none;">Incorrect password. Please try again.</p>
+  </div>
+
+  <!-- Form to add a new item -->
+  <form id="add-media-form" style="display: none;">
+    <input type="text" id="media-title" placeholder="Enter title" required />
+    <input type="url" id="media-url" placeholder="Enter URL" required />
+    <input type="text" id="media-category" placeholder="Enter category (optional)"/>
+    <button type="submit">Add Media</button>
+  </form>
+
+  <ul id="reading-list"></ul>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.firebasestorage.app",
+  messagingSenderId: "241512022087",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const mediaCollection = collection(db, "mediaItems");
+
+    let mediaItems = [];
+    let isAuthenticated = false;
+
+    async function fetchMediaItems() {
+      const snapshot = await getDocs(mediaCollection);
+      mediaItems = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      populateList();
+    }
+
+    async function addMediaItem(title, url, category = "") {
+      await addDoc(mediaCollection, { title, url, category, isFavorite: false });
+      fetchMediaItems();
+    }
+
+    async function updateMediaItem(id, updates) {
+      const ref = doc(db, "mediaItems", id);
+      await updateDoc(ref, updates);
+      fetchMediaItems();
+    }
+
+    async function deleteMediaItem(id) {
+      await deleteDoc(doc(db, "mediaItems", id));
+      fetchMediaItems();
+    }
+
+    function populateList() {
+      const list = document.getElementById("reading-list");
+      list.innerHTML = "";
+
+      mediaItems.forEach((item) => {
+        const listItem = document.createElement("li");
+
+        const link = document.createElement("a");
+        link.href = item.url;
+        link.textContent = item.title;
+        link.target = "_blank";
+        listItem.appendChild(link);
+
+        if (item.category) {
+          const cat = document.createElement("span");
+          cat.textContent = ` [${item.category}]`;
+          cat.style.color = "gray";
+          cat.style.marginLeft = "6px";
+          listItem.appendChild(cat);
+        }
+
+        if (isAuthenticated) {
+          const favoriteBtn = document.createElement("button");
+          favoriteBtn.textContent = item.isFavorite ? "? Unfavorite" : "? Favorite";
+          favoriteBtn.style.marginLeft = "10px";
+          favoriteBtn.addEventListener("click", () => {
+            updateMediaItem(item.id, { isFavorite: !item.isFavorite });
+          });
+          listItem.appendChild(favoriteBtn);
+
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "? Edit Category";
+          editBtn.style.marginLeft = "6px";
+          editBtn.addEventListener("click", () => {
+            const newCat = prompt("Enter new category:", item.category || "");
+            if (newCat !== null) {
+              updateMediaItem(item.id, { category: newCat.trim() });
+            }
+          });
+          listItem.appendChild(editBtn);
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "?? Delete";
+          deleteBtn.style.marginLeft = "6px";
+          deleteBtn.style.color = "red";
+          deleteBtn.addEventListener("click", () => {
+            deleteMediaItem(item.id);
+          });
+          listItem.appendChild(deleteBtn);
+
+          if (item.isFavorite) {
+            listItem.style.backgroundColor = "#FFFF99";
+          }
+        }
+
+        list.appendChild(listItem);
+      });
+    }
+
+    function addMedia(event) {
+      event.preventDefault();
+      const title = document.getElementById("media-title").value;
+      const url = document.getElementById("media-url").value;
+      const category = document.getElementById("media-category").value.trim();
+
+      if (title && url) {
+        addMediaItem(title, url, category);
+        document.getElementById("media-title").value = "";
+        document.getElementById("media-url").value = "";
+        document.getElementById("media-category").value = "";
+      } else {
+        alert("Please fill out both the title and URL.");
+      }
+    }
+
+    window.authenticate = function () {
+      const correctPassword = "Connect1@";
+      const passwordInput = document.getElementById("password").value;
+
+      if (passwordInput === correctPassword) {
+        isAuthenticated = true;
+        document.getElementById("add-media-form").style.display = "block";
+        document.getElementById("password-form").style.display = "none";
+        populateList();
+      } else {
+        document.getElementById("error-message").style.display = "block";
+      }
+    };
+
+    document.getElementById("add-media-form").addEventListener("submit", addMedia);
+
+    window.addEventListener("load", fetchMediaItems);
+  </script>
+</body>
+</html>
+
