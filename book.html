@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ole-mole reading list</title>
+  <style>
+   body {
+  font-family: Arial, sans-serif;
+  background-color: black;
+  background-image: url(''); /* ← Replace with your actual image URL */
+  background-repeat: repeat; /* Makes the image tile */
+  background-size: auto; /* Keeps original size for tiling */
+  margin: 0;
+  padding: 0;
+  color: white;
+}
+
+
+    #header {
+      background-color: black;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .title a {
+      color: #FFF073;
+      text-decoration: none;
+    }
+
+    .content-container {
+      border: 1px solid grey;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    #reading-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    #reading-list li {
+      margin-bottom: 10px;
+    }
+
+    #reading-list a {
+      color: #86D7FF;
+      text-decoration: none;
+    }
+
+    #reading-list a:hover {
+      color: #FFF073;
+    }
+
+    #reading-list .author {
+      color: white;
+      font-style: italic;
+      margin-left: 8px;
+    }
+
+    #add-book-form {
+      margin-top: 20px;
+      display: none;
+    }
+
+    #add-book-form input {
+      padding: 8px;
+      margin: 5px 5px 5px 0;
+      border: none;
+    }
+
+    #add-book-form button {
+      padding: 8px 12px;
+      background-color: #FFF073;
+      color: black;
+      border: none;
+      cursor: pointer;
+    }
+
+    #add-book-form button:hover {
+      background-color: #ffe600;
+    }
+
+    #password-form input, #password-form button {
+      padding: 6px;
+      margin-right: 10px;
+      border: none;
+    }
+
+    #password-form button {
+      background-color: #FFF073;
+      color: black;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      margin-left: 10px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: red;
+      font-size: 16px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid white;
+      color: white;
+      background-color: black;
+    }
+    input[type="password"] {
+      width: 200px;
+    }
+    .book {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid grey;
+    }
+    .book a {
+      color: #86D7FF;
+      text-decoration: none;
+    }
+    .book a:hover {
+      color: #FFF073;
+    }
+    .admin-actions {
+      margin-top: 10px;
+    }
+    .book button {
+      background: none;
+      border: none;
+      color: red;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .book button:hover {
+      color: yellow;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="header">
+      <h1 class="title"><a href="index.html">egon.td</a></h1>
+    </div>
+
+<div style="text-align: center;">
+  <img src="https://i.pinimg.com/736x/48/39/5d/48395ddb70d7fba838a4f1be10f5dbe1.jpg" alt="Centered Image" width="300">
+</div>
+
+    <h1>--ole mole list--</h1>
+
+    <!-- Admin Login -->
+    <div id="password-form">
+      <input type="password" id="password" placeholder="Enter admin password">
+      <button onclick="login()">Login</button>
+    </div>
+
+    <!-- Add Book Form (Admin Only) -->
+    <div id="add-book-form" style="display:none;">
+      <input type="text" id="bookTitle" placeholder="Book Title">
+      <input type="text" id="bookAuthor" placeholder="Author">
+      <input type="url" id="bookURL" placeholder="Book URL">
+      <button onclick="addBook()">Add Book</button>
+    </div>
+
+    <!-- Books List -->
+    <div id="reading-list"></div>
+  </div>
+
+  <!-- Firebase (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+      authDomain: "egontd-b9357.firebaseapp.com",
+      projectId: "egontd-b9357",
+      storageBucket: "egontd-b9357.appspot.com",
+      messagingSenderId: "241512022087",
+      appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const ADMIN_PASSWORD = "admin123";
+    let isAdmin = false;
+
+    // Admin login function
+    window.login = function () {
+      const entered = document.getElementById("password").value;
+      if (entered === ADMIN_PASSWORD) {
+        isAdmin = true;
+        document.getElementById("password-form").style.display = "none";
+        document.getElementById("add-book-form").style.display = "block";
+        loadBooks();
+      } else {
+        alert("Wrong password.");
+      }
+    };
+
+    // Add a new book to Firestore
+    window.addBook = async function () {
+      const title = document.getElementById("bookTitle").value.trim();
+      const author = document.getElementById("bookAuthor").value.trim();
+      const url = document.getElementById("bookURL").value.trim();
+
+      if (title && author && url) {
+        const date = new Date().toLocaleString();
+        await addDoc(collection(db, "books"), { title, author, url, date });
+        document.getElementById("bookTitle").value = "";
+        document.getElementById("bookAuthor").value = "";
+        document.getElementById("bookURL").value = "";
+        loadBooks();
+      } else {
+        alert("Please fill all fields.");
+      }
+    };
+
+    // Edit book information (optional)
+    window.editBook = async function (id, currentTitle, currentAuthor, currentURL) {
+      const newTitle = prompt("Edit book title:", currentTitle);
+      const newAuthor = prompt("Edit author:", currentAuthor);
+      const newURL = prompt("Edit URL:", currentURL);
+
+      if (newTitle && newAuthor && newURL) {
+        const docRef = doc(db, "books", id);
+        await updateDoc(docRef, { title: newTitle, author: newAuthor, url: newURL });
+        loadBooks();
+      }
+    };
+
+    // Delete a book
+    window.deleteBook = async function (id) {
+      if (confirm("Delete this book?")) {
+        const docRef = doc(db, "books", id);
+        await deleteDoc(docRef);
+        loadBooks();
+      }
+    };
+
+    // Load books from Firestore and display them
+    async function loadBooks() {
+      const container = document.getElementById("reading-list");
+      container.innerHTML = "";
+
+      const q = query(collection(db, "books"), orderBy("date", "desc"));
+      const snapshot = await getDocs(q);
+      snapshot.forEach((docSnap) => {
+        const book = docSnap.data();
+        const id = docSnap.id;
+
+        const el = document.createElement("div");
+        el.className = "book";
+        el.innerHTML = `
+          <div><a href="${book.url}" target="_blank"><strong>${book.title}</strong></a> by ${book.author}</div>
+          <div class="date">${book.date}</div>
+          ${isAdmin ? `
+            <div class="admin-actions">
+              <button onclick="editBook('${id}', '${book.title}', '${book.author}', '${book.url}')">Edit</button>
+              <button onclick="deleteBook('${id}')">Delete</button>
+            </div>
+          ` : ""}
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    window.onload = loadBooks;
+  </script>
+</body>
+</html>
+
