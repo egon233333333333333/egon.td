@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>twithots</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: monospace;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      background: black;
+      color: white;
+      border: 1px solid white;
+      font-family: monospace;
+      padding: 5px;
+      margin-top: 10px;
+    }
+    input, button {
+      background: black;
+      color: white;
+      border: 1px solid white;
+      font-family: monospace;
+      padding: 5px;
+      margin-top: 5px;
+    }
+    .thought {
+      margin-bottom: 15px;
+    }
+    .date {
+      font-size: 0.8em;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="header">
+      <h1 class="title"><a href="index.html" style="color:yellow;">back to home</a></h1>
+    </div>
+
+    <h1 style="color:yellow">Twithots</h1>
+
+    <!-- Admin Login -->
+    <div id="login">
+      <input type="password" id="password" placeholder="Enter admin password">
+      <button onclick="login()">Login</button>
+    </div>
+
+    <!-- Add Thought -->
+    <div id="admin" style="display:none;">
+      <textarea id="thoughtText" rows="3" placeholder="Write your thought..."></textarea><br>
+      <button onclick="addThought()">Add Thought</button>
+    </div>
+
+    <hr>
+
+    <!-- Thoughts -->
+    <div id="thoughts"></div>
+
+  </div>
+
+  <!-- Firebase (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, updateDoc,
+      deleteDoc, doc, orderBy, query
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+      authDomain: "egontd-b9357.firebaseapp.com",
+      projectId: "egontd-b9357",
+      storageBucket: "egontd-b9357.appspot.com",
+      messagingSenderId: "241512022087",
+      appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const ADMIN_PASSWORD = "admin123";
+    let isAdmin = false;
+
+    window.login = function () {
+      const entered = document.getElementById("password").value;
+      if (entered === ADMIN_PASSWORD) {
+        isAdmin = true;
+        document.getElementById("login").style.display = "none";
+        document.getElementById("admin").style.display = "block";
+        loadThoughts();
+      } else {
+        alert("Wrong password.");
+      }
+    };
+
+    window.addThought = async function () {
+      const text = document.getElementById("thoughtText").value.trim();
+      if (text) {
+        const date = new Date().toLocaleString();
+        await addDoc(collection(db, "thoughts"), { text, date });
+        document.getElementById("thoughtText").value = "";
+        loadThoughts();
+      }
+    };
+
+    window.editThought = async function (id, currentText) {
+      const newText = prompt("Edit your thought:", currentText);
+      if (newText !== null) {
+        const docRef = doc(db, "thoughts", id);
+        await updateDoc(docRef, { text: newText.trim() });
+        loadThoughts();
+      }
+    };
+
+    window.deleteThought = async function (id) {
+      if (confirm("Delete this thought?")) {
+        const docRef = doc(db, "thoughts", id);
+        await deleteDoc(docRef);
+        loadThoughts();
+      }
+    };
+
+    async function loadThoughts() {
+      const container = document.getElementById("thoughts");
+      container.innerHTML = "";
+
+      const q = query(collection(db, "thoughts"), orderBy("date", "desc"));
+      const snapshot = await getDocs(q);
+      snapshot.forEach((docSnap) => {
+        const t = docSnap.data();
+        const id = docSnap.id;
+
+        const el = document.createElement("div");
+        el.className = "thought";
+        el.innerHTML = `
+          <div>${t.text}</div>
+          <div class="date">${t.date}</div>
+          ${isAdmin ? `
+            <button onclick="editThought('${id}', \`${t.text.replace(/`/g, "\\`")}\`)">Edit</button>
+            <button onclick="deleteThought('${id}')">Delete</button>
+          ` : ""}
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    window.onload = loadThoughts;
+  </script>
+</body>
+</html>
