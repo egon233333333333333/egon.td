@@ -18,17 +18,36 @@
   <p id="error" style="color:red; display:none;">Wrong password</p>
 </div>
 
-<script>
-function login() {
-  const pass = document.getElementById("password").value;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
-  if (pass === "Connect1@") {
-    localStorage.setItem("isAdmin", "true");
-    window.location.href = "media.html"; // redirect to your page
-  } else {
+const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.login = async function () {
+  const password = document.getElementById("password").value;
+
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      "admin@email.com", // MUST match your Firebase user
+      password
+    );
+
+    window.location.href = "media.html";
+
+  } catch (error) {
     document.getElementById("error").style.display = "block";
   }
-}
+};
 </script>
 
 </body>
