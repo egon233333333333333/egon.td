@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
+
+<body style="background:#0d0d0d; color:white; font-family:Courier New; display:flex; height:100vh; align-items:center; justify-content:center;">
+
+<div style="border:1px solid #333; padding:30px; text-align:center;">
+  <h2>ADMIN LOGIN</h2>
+
+  <input type="password" id="password" placeholder="Enter password" style="padding:10px;">
+  <br><br>
+
+  <button onclick="login()">Enter</button>
+
+  <p id="error" style="color:red; display:none;">Wrong password</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+// 🔑 PASTE YOUR CONFIG HERE
+const firebaseConfig = {
+  apiKey: "XXXX",
+  authDomain: "XXXX",
+  projectId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// LOGIN FUNCTION
+window.login = async function () {
+  const password = document.getElementById("password").value;
+
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      "admin@email.com",
+      password
+    );
+
+    window.location.href = "media.html";
+
+  } catch (error) {
+    document.getElementById("error").style.display = "block";
+  }
+};
+</script>
+
+</body>
+</html>
