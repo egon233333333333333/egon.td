@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>media</title>
+</head>
+
+<body style="background-color:powderblue;">
+
+<h2>curated media</h2>
+
+<!-- ADMIN ONLY FORM -->
+<form id="add-media-form" style="display:none;">
+  <input type="text" id="media-title" placeholder="Enter title" required />
+  <input type="url" id="media-url" placeholder="Enter URL" required />
+  <input type="text" id="media-category" placeholder="Enter category (optional)"/>
+  <button type="submit">Add Media</button>
+</form>
+
+<button onclick="logout()" id="logout-btn" style="display:none;">Logout</button>
+
+<ul id="reading-list"></ul>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.firebasestorage.app",
+  messagingSenderId: "241512022087",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const mediaCollection = collection(db, "mediaItems");
+
+let mediaItems = [];
+
+function isAdmin() {
+  return localStorage.getItem("isAdmin") === "true";
+}
+
+/* ---------- PROTECT PAGE ---------- */
+if (!isAdmin()) {
+  window.location.href = "login.html";
+}
+
+/* ---------- UI UNLOCK ---------- */
+function unlockAdminUI() {
+  document.getElementById("add-media-form").style.display = "block";
+  document.getElementById("logout-btn").style.display = "block";
+}
+
+/* ---------- FIREBASE ---------- */
+async function fetchMediaItems() {
+  const snapshot = await getDocs(mediaCollection);
+  mediaItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+}
+
+async function addMediaItem(title, url, category="") {
+  await addDoc(mediaCollection, { title, url, category, isFavorite:false });
+  fetchMediaItems();
+}
+
+async function updateMediaItem(id, updates) {
+  await updateDoc(doc(db,"mediaItems",id), updates);
+  fetchMediaItems();
+}
+
+async function deleteMediaItem(id) {
+  await deleteDoc(doc(db,"mediaItems",id));
+  fetchMediaItems();
+}
+
+/* ---------- RENDER ---------- */
+function render() {
+  const list = document.getElementById("reading-list");
+  list.innerHTML = "";
+
+  mediaItems.forEach(item => {
+    const li = document.createElement("li");
+
+    const a = document.createElement("a");
+    a.href = item.url;
+    a.textContent = item.title;
+    a.target = "_blank";
+    li.appendChild(a);
+
+    if (item.category) {
+      const c = document.createElement("span");
+      c.textContent = " [" + item.category + "]";
+      c.style.color = "gray";
+      li.appendChild(c);
+    }
+
+    if (isAdmin()) {
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.onclick = () => deleteMediaItem(item.id);
+      li.appendChild(del);
+    }
+
+    list.appendChild(li);
+  });
+}
+
+/* ---------- EVENTS ---------- */
+document.getElementById("add-media-form").addEventListener("submit", e => {
+  e.preventDefault();
+
+  addMediaItem(
+    document.getElementById("media-title").value,
+    document.getElementById("media-url").value,
+    document.getElementById("media-category").value
+  );
+});
+
+/* ---------- LOGOUT ---------- */
+window.logout = function () {
+  localStorage.removeItem("isAdmin");
+  window.location.href = "login.html";
+};
+
+/* ---------- INIT ---------- */
+window.addEventListener("load", () => {
+  fetchMediaItems();
+  unlockAdminUI();
+});
+</script>
+
+</body>
+</html>
