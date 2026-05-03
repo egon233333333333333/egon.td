@@ -140,7 +140,56 @@
   width: 100%;
   
 }
-  </style>
+
+.contact-form {
+  max-width: 500px;
+  margin: 80px auto;
+  padding: 30px;
+  border: 1px solid #333;
+  background: #111;
+}
+
+.contact-form h2 {
+  font-weight: normal;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  color: #e0e0e0;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: #888;
+}
+
+.contact-form button {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #888;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.contact-form button:hover {
+  background: #e0e0e0;
+  color: #0d0d0d;
+}
+
+	  
+</style>
+
+	
 </head>
 <body>
   <div class="container">
@@ -212,8 +261,23 @@
 		<br><br><br>
 		
 	<img src="https://i.imgur.com/c5nIcwG.jpeg" width="460" height="345">
-
+		  
+<div class="contact-form">
+  <h2>Send me a Message</h2>  
 	
+	 <form action="https://formspree.io/f/mnjwjlzw" method="POST">
+	  <label>Enter your name:</label><br>
+	  <input type="text" name="name" required><br><br>
+	
+	  <label>Email:</label><br>
+	  <input type="email" name="email" required><br><br>
+	
+	  <label>Message:</label><br>
+	  <textarea name="message" required></textarea><br><br>
+	
+	  <button type="submit">Send</button>
+	</form>
+</div>
 
 
       </div>
