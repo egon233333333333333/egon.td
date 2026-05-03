@@ -2,44 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ramblings</title>
+<title>Twithots</title>
 
 <style>
-  * { box-sizing: border-box; }
-
   body {
-    background-color: black;
+    background: black;
     color: white;
     font-family: monospace;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
   }
 
   .container {
-    width: 100%;
     max-width: 600px;
-    margin-left: 0;
     padding: 20px;
   }
 
-  textarea, input, button {
+  textarea, button {
     background: black;
     color: white;
     border: 1px solid white;
     font-family: monospace;
-    padding: 5px;
+    padding: 6px;
     margin-top: 5px;
   }
 
   textarea {
     width: 100%;
-    margin-top: 10px;
   }
 
   .thought {
     margin-bottom: 15px;
-    word-wrap: break-word;
   }
 
   .date {
@@ -55,10 +48,6 @@
   a:hover {
     text-decoration: underline;
   }
-
-  button {
-    cursor: pointer;
-  }
 </style>
 </head>
 
@@ -67,25 +56,17 @@
 <div class="container">
 
   <h1><a href="index.html" style="color:yellow;">back to home</a></h1>
+  <h1 style="color:yellow;">Twithots</h1>
 
-  <h1 style="color:yellow">Twithots</h1>
-
-  <!-- LOGIN (only for admin) -->
-  <div id="login-box">
-    <input type="password" id="password" placeholder="Enter admin password">
-    <button onclick="login()">Login</button>
-    <p id="error" style="color:red; display:none;">Wrong password</p>
-  </div>
-
-  <!-- ADMIN PANEL -->
+  <!-- ADMIN PANEL (hidden by default) -->
   <div id="admin-panel" style="display:none;">
-    <textarea id="thoughtText" rows="3" placeholder="Write your thought..."></textarea>
+    <textarea id="thoughtText" rows="3" placeholder="Write your thought..."></textarea><br>
     <button onclick="addThought()">Add Thought</button>
     <button onclick="logout()">Logout</button>
+    <hr>
   </div>
 
-  <hr>
-
+  <!-- PUBLIC THOUGHTS -->
   <div id="thoughts"></div>
 
 </div>
@@ -118,34 +99,17 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const col = collection(db, "thoughts");
 
+/* ---------- AUTH ---------- */
 function isAdmin() {
   return localStorage.getItem("isAdmin") === "true";
 }
 
-/* ---------- LOGIN ---------- */
-window.login = function () {
-  const pass = document.getElementById("password").value;
-
-  if (pass === "admin123") {
-    localStorage.setItem("isAdmin", "true");
-    unlockUI();
-  } else {
-    document.getElementById("error").style.display = "block";
-  }
-};
-
-function unlockUI() {
-  document.getElementById("login-box").style.display = "none";
+/* ---------- SHOW ADMIN UI IF LOGGED IN ---------- */
+function unlockAdmin() {
   document.getElementById("admin-panel").style.display = "block";
 }
 
-/* ---------- LOGOUT ---------- */
-window.logout = function () {
-  localStorage.removeItem("isAdmin");
-  location.reload();
-};
-
-/* ---------- ADD THOUGHT ---------- */
+/* ---------- ADD ---------- */
 window.addThought = async function () {
   const text = document.getElementById("thoughtText").value.trim();
 
@@ -210,10 +174,16 @@ window.deleteThought = async function (id) {
   }
 };
 
+/* ---------- LOGOUT ---------- */
+window.logout = function () {
+  localStorage.removeItem("isAdmin");
+  location.reload();
+};
+
 /* ---------- INIT ---------- */
 window.onload = function () {
   if (isAdmin()) {
-    unlockUI();
+    unlockAdmin();
   }
 
   loadThoughts();
