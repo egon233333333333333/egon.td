@@ -1,1 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ole-mole reading list</title>
 
+<style>
+#header {
+      background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
+	  background-size: 100% 100%; /* Stretches to fill width and height */
+ 	  background-repeat: no-repeat;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+.title a {
+      color: #FFF073;
+      text-decoration: none; /* Remove underline */
+    }
+
+.subtitle a {
+      color: grey;
+	  font-family: Courier New;
+      text-decoration: none; /* Remove underline */
+}
+  body {
+    font-family: Times New Roman, sans-serif;
+    background-color: #EBE4E4;
+    margin: 0;
+    padding: 0;
+    color: #566175;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  #reading-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .book {
+    margin: 10px 0;
+    padding: 10px;
+  }
+
+  .book a {
+    color: blue;
+    text-decoration: none;
+  }
+
+  .book a:hover {
+    color: #FFF073;
+  }
+
+  .date {
+    font-size: 0.8em;
+    color: gray;
+  }
+
+  button {
+    margin-top: 5px;
+    padding: 5px 10px;
+    background: black;
+    color: white;
+    border: 1px solid white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    opacity: 0.8;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+ <div id="header">
+      <h1 class="title"><a href="index.html">egon.td</a></h1>
+	  <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
+	  </p>
+  </div>
+
+  <div style="text-align:center;">
+    <img src="https://i.pinimg.com/736x/54/42/c3/5442c369575d6878995eebe6b4a82368.jpg" width="300">
+  </div>
+
+  <h1>-- ole mole list --</h1>
+
+  <!-- ADMIN PANEL ONLY -->
+  <div id="admin-panel" style="display:none;">
+    <input type="text" id="bookTitle" placeholder="Book Title"><br>
+    <input type="text" id="bookAuthor" placeholder="Author"><br>
+    <input type="url" id="bookURL" placeholder="Book URL"><br>
+    <button onclick="addBook()">Add Book</button>
+    <button onclick="logout()">Logout</button>
+    <hr>
+  </div>
+
+  <!-- BOOK LIST -->
+  <div id="reading-list"></div>
+
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.appspot.com",
+  messagingSenderId: "241512022087",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+let isAdmin = false;
+const col = collection(db, "books");
+
+/* ---------- AUTH ---------- */
+
+
+/* ---------- ADMIN UI ---------- */
+function unlockAdmin() {
+  document.getElementById("admin-panel").style.display = "block";
+}
+
+/* ---------- ADD BOOK ---------- */
+window.addBook = async function () {
+  const title = document.getElementById("bookTitle").value.trim();
+  const author = document.getElementById("bookAuthor").value.trim();
+  const url = document.getElementById("bookURL").value.trim();
+
+  if (title && author && url) {
+    await addDoc(col, {
+      title,
+      author,
+      url,
+      date: new Date().toLocaleString()
+    });
+
+    document.getElementById("bookTitle").value = "";
+    document.getElementById("bookAuthor").value = "";
+    document.getElementById("bookURL").value = "";
+
+    loadBooks();
+  }
+};
+
+/* ---------- LOAD BOOKS ---------- */
+async function loadBooks() {
+  const container = document.getElementById("reading-list");
+  container.innerHTML = "";
+
+  const q = query(col, orderBy("date", "desc"));
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach((d) => {
+    const b = d.data();
+    const id = d.id;
+
+    const div = document.createElement("div");
+    div.className = "book";
+
+    div.innerHTML = `
+      <div>
+        <a href="${b.url}" target="_blank"><strong>${b.title}</strong></a>
+        by ${b.author}
+      </div>
+      <div class="date">${b.date}</div>
+
+      ${isAdmin() ? `
+        <button onclick="editBook('${id}', \`${b.title}\`, \`${b.author}\`, \`${b.url}\`)">Edit</button>
+        <button onclick="deleteBook('${id}')">Delete</button>
+      ` : ""}
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+/* ---------- EDIT ---------- */
+window.editBook = async function (id, title, author, url) {
+  const newTitle = prompt("Title:", title);
+  const newAuthor = prompt("Author:", author);
+  const newURL = prompt("URL:", url);
+
+  if (newTitle && newAuthor && newURL) {
+    await updateDoc(doc(db, "books", id), {
+      title: newTitle,
+      author: newAuthor,
+      url: newURL
+    });
+
+    loadBooks();
+  }
+};
+
+/* ---------- DELETE ---------- */
+window.deleteBook = async function (id) {
+  if (confirm("Delete this book?")) {
+    await deleteDoc(doc(db, "books", id));
+    loadBooks();
+  }
+};
+
+/* ---------- LOGOUT ---------- */
+window.logout = function () {
+  localStorage.removeItem("isAdmin");
+  location.reload();
+};
+
+/* ---------- INIT ---------- */
+window.onload = function () {
+  if (isAdmin()) {
+    unlockAdmin();
+  }
+
+  loadBooks();
+};
+</script>
+
+</body>
+</html>
