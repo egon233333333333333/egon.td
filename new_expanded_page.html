@@ -109,7 +109,7 @@ function render() {
     }
 
     /* ADMIN ONLY BUTTONS */
-    if (isAdmin()) {
+    if (auth.currentUser && auth.currentUser.email === "lucioegbert18@gmail.com") {
 
       const del = document.createElement("button");
       del.textContent = "Delete";
