@@ -9,6 +9,7 @@
 
 <h2>curated media</h2>
 
+<!-- ADMIN PANEL (hidden for guests) -->
 <div id="admin-panel" style="display:none;">
   <form id="add-media-form">
     <input type="text" id="media-title" placeholder="Title" required />
@@ -59,22 +60,21 @@ const mediaCollection = collection(db, "mediaItems");
 let isAdmin = false;
 let mediaItems = [];
 
-/* 🔒 HARD AUTH GUARD */
+/* AUTH (NO REDIRECT) */
 onAuthStateChanged(auth, (user) => {
 
-  if (!user || user.email !== "lucioegbert18@gmail.com") {
-    window.location.href = "login.html"; // 🚨 BLOCK ACCESS
-    return;
+  if (user && user.email === "lucioegbert18@gmail.com") {
+    isAdmin = true;
+    document.getElementById("admin-panel").style.display = "block";
+  } else {
+    isAdmin = false;
+    document.getElementById("admin-panel").style.display = "none";
   }
 
-  // ONLY reaches here if logged in
-  isAdmin = true;
-  document.getElementById("admin-panel").style.display = "block";
-
-  fetchMediaItems();
+  fetchMediaItems(); // always load for guests + admin
 });
 
-/* CRUD */
+/* CRUD (PROTECTED) */
 
 async function fetchMediaItems() {
   const snapshot = await getDocs(mediaCollection);
@@ -117,6 +117,12 @@ function render() {
     a.textContent = item.title;
     a.target = "_blank";
     li.appendChild(a);
+
+    if (item.category) {
+      const span = document.createElement("span");
+      span.textContent = ` [${item.category}]`;
+      li.appendChild(span);
+    }
 
     if (isAdmin) {
       const edit = document.createElement("button");
