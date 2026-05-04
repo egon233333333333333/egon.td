@@ -8,14 +8,15 @@
 <body style="background-color:powderblue;">
 
 <h2>curated media</h2>
-<h4>loading list...</h4>
 
 <!-- ADMIN PANEL -->
 <div id="admin-panel" style="display:none; margin-bottom:20px;">
+  <p id="status"></p>
+
   <form id="add-media-form" style="display:none;">
     <input type="text" id="media-title" placeholder="Enter title" required />
     <input type="url" id="media-url" placeholder="Enter URL" required />
-    <input type="text" id="media-category" placeholder="Enter category (optional)"/>
+    <input type="text" id="media-category" placeholder="Category"/>
     <button type="submit">Add Media</button>
   </form>
 
@@ -44,7 +45,6 @@ import {
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
-/* ✅ SAME CONFIG (EXACT COPY) */
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
@@ -58,7 +58,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ✅ ENSURE SESSION PERSISTENCE */
 await setPersistence(auth, browserLocalPersistence);
 
 const mediaCollection = collection(db, "mediaItems");
@@ -66,12 +65,18 @@ const mediaCollection = collection(db, "mediaItems");
 let mediaItems = [];
 let isAdmin = false;
 
-function unlockAdmin() {
+/* UI CONTROL */
+function unlockAdmin(email) {
   document.getElementById("admin-panel").style.display = "block";
   document.getElementById("add-media-form").style.display = "block";
+  document.getElementById("status").textContent = "Logged in as: " + email;
 }
 
-/* ---------- FIREBASE CRUD ---------- */
+function lockAdmin() {
+  document.getElementById("admin-panel").style.display = "none";
+}
+
+/* CRUD WITH PROTECTION */
 
 async function fetchMediaItems() {
   const snapshot = await getDocs(mediaCollection);
@@ -80,27 +85,32 @@ async function fetchMediaItems() {
 }
 
 async function addMediaItem(title, url, category = "") {
+  if (!isAdmin) return alert("Not authorized");
+
   await addDoc(mediaCollection, {
     title,
     url,
-    category,
-    isFavorite: false
+    category
   });
 
   fetchMediaItems();
 }
 
 async function updateMediaItem(id, updates) {
+  if (!isAdmin) return alert("Not authorized");
+
   await updateDoc(doc(db, "mediaItems", id), updates);
   fetchMediaItems();
 }
 
 async function deleteMediaItem(id) {
+  if (!isAdmin) return alert("Not authorized");
+
   await deleteDoc(doc(db, "mediaItems", id));
   fetchMediaItems();
 }
 
-/* ---------- RENDER ---------- */
+/* RENDER */
 
 function render() {
   const list = document.getElementById("reading-list");
@@ -118,7 +128,6 @@ function render() {
     if (item.category) {
       const span = document.createElement("span");
       span.textContent = ` [${item.category}]`;
-      span.style.color = "gray";
       li.appendChild(span);
     }
 
@@ -127,14 +136,11 @@ function render() {
       edit.textContent = "Edit";
       edit.onclick = () => {
         const cat = prompt("New category:", item.category || "");
-        if (cat !== null) {
-          updateMediaItem(item.id, { category: cat });
-        }
+        if (cat !== null) updateMediaItem(item.id, { category: cat });
       };
 
       const del = document.createElement("button");
       del.textContent = "Delete";
-      del.style.color = "red";
       del.onclick = () => deleteMediaItem(item.id);
 
       li.appendChild(edit);
@@ -145,7 +151,7 @@ function render() {
   });
 }
 
-/* ---------- FORM ---------- */
+/* FORM */
 
 document.getElementById("add-media-form").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -159,25 +165,27 @@ document.getElementById("add-media-form").addEventListener("submit", (e) => {
   e.target.reset();
 });
 
-/* ---------- AUTH ---------- */
+/* AUTH */
 
 onAuthStateChanged(auth, (user) => {
-  isAdmin = false;
-
   if (user && user.email === "lucioegbert18@gmail.com") {
     isAdmin = true;
-    unlockAdmin();
+    unlockAdmin(user.email);
+  } else {
+    isAdmin = false;
+    lockAdmin();
   }
 
   fetchMediaItems();
 });
 
-/* ---------- LOGOUT ---------- */
+/* LOGOUT */
 
 window.logout = function () {
-  signOut(auth).then(() => location.reload());
+  signOut(auth).then(() => {
+    location.reload();
+  });
 };
-
 </script>
 
 </body>
