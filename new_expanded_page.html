@@ -39,6 +39,8 @@ import {
   doc
 } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+  
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
@@ -49,15 +51,14 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 const mediaCollection = collection(db, "mediaItems");
 
 let mediaItems = [];
 
 /* ---------- AUTH CHECK ---------- */
-function isAdmin() {
-  return localStorage.getItem("isAdmin") === "true";
-}
+
 
 /* ---------- UNLOCK ADMIN UI ---------- */
 function unlockAdmin() {
@@ -145,17 +146,20 @@ document.getElementById("add-media-form").addEventListener("submit", e => {
 
 /* ---------- LOGOUT ---------- */
 window.logout = function () {
-  localStorage.removeItem("isAdmin");
-  location.reload();
+  signOut(auth).then(() => {
+    location.reload();
+  });
 };
 
 /* ---------- INIT ---------- */
 window.addEventListener("load", () => {
   fetchMediaItems();
 
-  if (isAdmin()) {
+ onAuthStateChanged(auth, (user) => {
+  if (user && user.email === "lucioegbert18@gmail.com") {
     unlockAdmin();
   }
+});
 });
 </script>
 
