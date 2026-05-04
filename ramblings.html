@@ -6,47 +6,95 @@
 
 <style>
 body {
-  background: black;
-  color: white;
-  font-family: monospace;
+  font-family: Times New Roman, sans-serif;
+  background-color: #877360;
   margin: 0;
   padding: 0;
+  color: grey;
 }
 
 .container {
-  max-width: 600px;
-  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
+#header {
+  background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title a {
+  color: #FFF073;
+  text-decoration: none;
+}
+
+.subtitle a {
+  color: grey;
+  font-family: Courier New;
+  text-decoration: none;
+}
+
+.content-container {
+  border: 1px solid grey;
+  background-color: #EBE4E4;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+/* LINKS */
+a {
+  color: black;
+  text-decoration: none;
+}
+
+a:hover {
+  color: blue;
+  text-decoration: underline;
+}
+
+/* ADMIN AREA */
 textarea, button {
-  background: black;
-  color: white;
-  border: 1px solid white;
-  font-family: monospace;
+  font-family: Times New Roman, sans-serif;
+  border: 1px solid #333;
   padding: 6px;
   margin-top: 5px;
 }
 
 textarea {
   width: 100%;
+  background: #f5f5f5;
 }
 
+button {
+  background: transparent;
+  color: black;
+  cursor: pointer;
+}
+
+button:hover {
+  background: brown;
+  color: white;
+}
+
+/* THOUGHT BLOCKS */
 .thought {
   margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
 }
 
 .date {
   font-size: 0.8em;
-  color: #aaa;
+  color: gray;
 }
 
-a {
-  color: yellow;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
+#admin-panel {
+  margin-bottom: 15px;
 }
 </style>
 </head>
@@ -55,18 +103,28 @@ a:hover {
 
 <div class="container">
 
-  <h1><a href="index.html">back to home</a></h1>
-  <h1>ramblings</h1>
-
-  <!-- ADMIN PANEL -->
-  <div id="admin-panel" style="display:none;">
-    <textarea id="thoughtText" rows="3" placeholder="Write your thought..."></textarea><br>
-    <button onclick="addThought()">Add Thought</button>
-    <hr>
+  <!-- HEADER (same template style) -->
+  <div id="header">
+    <h1 class="title"><a href="index.html">egon.td</a></h1>
+    <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
   </div>
 
-  <div id="thoughts"></div>
+  <div class="content-container">
 
+    <h1>ramblings</h1>
+
+    <h1><a href="index.html">back to home</a></h1>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" style="display:none;">
+      <textarea id="thoughtText" rows="3" placeholder="Write your thought..."></textarea><br>
+      <button onclick="addThought()">Add Thought</button>
+      <hr>
+    </div>
+
+    <div id="thoughts"></div>
+
+  </div>
 </div>
 
 <script type="module">
@@ -91,7 +149,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
   storageBucket: "egontd-b9357.appspot.com",
@@ -109,9 +167,7 @@ const col = collection(db, "thoughts");
 
 let isAdmin = false;
 
-/* AUTH */
 onAuthStateChanged(auth, (user) => {
-
   if (user && user.email === "lucioegbert18@gmail.com") {
     isAdmin = true;
     document.getElementById("admin-panel").style.display = "block";
@@ -123,7 +179,6 @@ onAuthStateChanged(auth, (user) => {
   loadThoughts();
 });
 
-/* ADD */
 window.addThought = async function () {
   if (!isAdmin) return;
 
@@ -140,7 +195,6 @@ window.addThought = async function () {
   }
 };
 
-/* LOAD */
 async function loadThoughts() {
   const container = document.getElementById("thoughts");
   container.innerHTML = "";
@@ -177,7 +231,6 @@ async function loadThoughts() {
   });
 }
 
-/* EDIT */
 window.editThought = async function (id, currentText) {
   if (!isAdmin) return;
 
@@ -192,7 +245,6 @@ window.editThought = async function (id, currentText) {
   }
 };
 
-/* DELETE */
 window.deleteThought = async function (id) {
   if (!isAdmin) return;
 
