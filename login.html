@@ -8,14 +8,21 @@
 <body style="background:#0d0d0d; color:#e0e0e0; font-family:Courier New; display:flex; height:100vh; align-items:center; justify-content:center;">
 
 <div style="border:1px solid #333; padding:30px; text-align:center;">
-  <h2>ADMIN LOGIN</h2>
+  <h2>ADMIN PANEL</h2>
 
-  <input type="password" id="password" placeholder="Enter password" style="padding:10px; width:200px;">
-  <br><br>
+  <div id="login-box">
+    <input type="password" id="password" placeholder="Enter password">
+    <br><br>
+    <button onclick="login()">Login</button>
+    <p id="error" style="color:red; display:none;">Wrong password</p>
+  </div>
 
-  <button onclick="login()">Enter</button>
-
-  <p id="error" style="color:red; display:none;">Wrong password</p>
+  <div id="logged-in-box" style="display:none;">
+    <p id="status"></p>
+    <button onclick="logout()">Logout</button>
+    <br><br>
+    <button onclick="goToAdmin()">Go to Media Page</button>
+  </div>
 </div>
 
 <script type="module">
@@ -23,6 +30,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebas
 import {
   getAuth,
   signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -41,21 +50,37 @@ const auth = getAuth(app);
 
 await setPersistence(auth, browserLocalPersistence);
 
+/* AUTH STATE */
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("login-box").style.display = "none";
+    document.getElementById("logged-in-box").style.display = "block";
+    document.getElementById("status").textContent = "Logged in as: " + user.email;
+  } else {
+    document.getElementById("login-box").style.display = "block";
+    document.getElementById("logged-in-box").style.display = "none";
+  }
+});
+
+/* LOGIN */
 window.login = async function () {
   const password = document.getElementById("password").value;
 
   try {
-    await signInWithEmailAndPassword(
-      auth,
-      "lucioegbert18@gmail.com",
-      password
-    );
-
-    window.location.href = "new_expanded_page.html";
-
-  } catch (error) {
+    await signInWithEmailAndPassword(auth, "lucioegbert18@gmail.com", password);
+  } catch {
     document.getElementById("error").style.display = "block";
   }
+};
+
+/* LOGOUT */
+window.logout = function () {
+  signOut(auth);
+};
+
+/* NAVIGATION */
+window.goToAdmin = function () {
+  window.location.href = "new_expanded_page.html";
 };
 </script>
 
