@@ -153,13 +153,15 @@ window.logout = function () {
 
 /* ---------- INIT ---------- */
 window.addEventListener("load", () => {
-  fetchMediaItems();
+  onAuthStateChanged(auth, (user) => {
 
- onAuthStateChanged(auth, (user) => {
-  if (user && user.email === "lucioegbert18@gmail.com") {
-    unlockAdmin();
-  }
-});
+    if (user && user.email === "lucioegbert18@gmail.com") {
+      unlockAdmin();
+    }
+
+    // ✅ load data AFTER Firebase restores login session
+    fetchMediaItems();
+  });
 });
 </script>
 
