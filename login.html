@@ -36,11 +36,20 @@ window.login = async function () {
   const password = document.getElementById("password").value;
 
   try {
-    await signInWithEmailAndPassword(
-      auth,
-      "lucioegbert18@gmail.com", // MUST match your Firebase user
-      password
-    );
+  await signInWithEmailAndPassword(
+    auth,
+    "lucioegbert18@gmail.com",
+    password
+  );
+
+  // ✅ ADD THIS LINE
+  localStorage.setItem("isAdmin", "true");
+
+  window.location.href = "media.html";
+
+} catch (error) {
+  document.getElementById("error").style.display = "block";
+}
 
     window.location.href = "media.html";
 
