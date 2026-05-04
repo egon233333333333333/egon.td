@@ -9,18 +9,13 @@
 
 <h2>curated media</h2>
 
-<!-- ADMIN PANEL -->
-<div id="admin-panel" style="display:none; margin-bottom:20px;">
-  <p id="status"></p>
-
-  <form id="add-media-form" style="display:none;">
-    <input type="text" id="media-title" placeholder="Enter title" required />
-    <input type="url" id="media-url" placeholder="Enter URL" required />
+<div id="admin-panel" style="display:none;">
+  <form id="add-media-form">
+    <input type="text" id="media-title" placeholder="Title" required />
+    <input type="url" id="media-url" placeholder="URL" required />
     <input type="text" id="media-category" placeholder="Category"/>
-    <button type="submit">Add Media</button>
+    <button type="submit">Add</button>
   </form>
-
-  <button onclick="logout()">Logout</button>
 </div>
 
 <ul id="reading-list"></ul>
@@ -40,7 +35,6 @@ import {
 import {
   getAuth,
   onAuthStateChanged,
-  signOut,
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -62,21 +56,25 @@ await setPersistence(auth, browserLocalPersistence);
 
 const mediaCollection = collection(db, "mediaItems");
 
-let mediaItems = [];
 let isAdmin = false;
+let mediaItems = [];
 
-/* UI CONTROL */
-function unlockAdmin(email) {
+/* 🔒 HARD AUTH GUARD */
+onAuthStateChanged(auth, (user) => {
+
+  if (!user || user.email !== "lucioegbert18@gmail.com") {
+    window.location.href = "login.html"; // 🚨 BLOCK ACCESS
+    return;
+  }
+
+  // ONLY reaches here if logged in
+  isAdmin = true;
   document.getElementById("admin-panel").style.display = "block";
-  document.getElementById("add-media-form").style.display = "block";
-  document.getElementById("status").textContent = "Logged in as: " + email;
-}
 
-function lockAdmin() {
-  document.getElementById("admin-panel").style.display = "none";
-}
+  fetchMediaItems();
+});
 
-/* CRUD WITH PROTECTION */
+/* CRUD */
 
 async function fetchMediaItems() {
   const snapshot = await getDocs(mediaCollection);
@@ -84,27 +82,22 @@ async function fetchMediaItems() {
   render();
 }
 
-async function addMediaItem(title, url, category = "") {
-  if (!isAdmin) return alert("Not authorized");
+async function addMediaItem(title, url, category) {
+  if (!isAdmin) return;
 
-  await addDoc(mediaCollection, {
-    title,
-    url,
-    category
-  });
-
+  await addDoc(mediaCollection, { title, url, category });
   fetchMediaItems();
 }
 
 async function updateMediaItem(id, updates) {
-  if (!isAdmin) return alert("Not authorized");
+  if (!isAdmin) return;
 
   await updateDoc(doc(db, "mediaItems", id), updates);
   fetchMediaItems();
 }
 
 async function deleteMediaItem(id) {
-  if (!isAdmin) return alert("Not authorized");
+  if (!isAdmin) return;
 
   await deleteDoc(doc(db, "mediaItems", id));
   fetchMediaItems();
@@ -124,12 +117,6 @@ function render() {
     a.textContent = item.title;
     a.target = "_blank";
     li.appendChild(a);
-
-    if (item.category) {
-      const span = document.createElement("span");
-      span.textContent = ` [${item.category}]`;
-      li.appendChild(span);
-    }
 
     if (isAdmin) {
       const edit = document.createElement("button");
@@ -164,28 +151,6 @@ document.getElementById("add-media-form").addEventListener("submit", (e) => {
 
   e.target.reset();
 });
-
-/* AUTH */
-
-onAuthStateChanged(auth, (user) => {
-  if (user && user.email === "lucioegbert18@gmail.com") {
-    isAdmin = true;
-    unlockAdmin(user.email);
-  } else {
-    isAdmin = false;
-    lockAdmin();
-  }
-
-  fetchMediaItems();
-});
-
-/* LOGOUT */
-
-window.logout = function () {
-  signOut(auth).then(() => {
-    location.reload();
-  });
-};
 </script>
 
 </body>
