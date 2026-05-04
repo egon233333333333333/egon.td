@@ -50,7 +50,6 @@ const auth = getAuth(app);
 
 await setPersistence(auth, browserLocalPersistence);
 
-/* AUTH STATE */
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById("login-box").style.display = "none";
@@ -62,7 +61,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-/* LOGIN */
 window.login = async function () {
   const password = document.getElementById("password").value;
 
@@ -73,12 +71,10 @@ window.login = async function () {
   }
 };
 
-/* LOGOUT */
 window.logout = function () {
   signOut(auth);
 };
 
-/* NAVIGATION */
 window.goToAdmin = function () {
   window.location.href = "new_expanded_page.html";
 };
