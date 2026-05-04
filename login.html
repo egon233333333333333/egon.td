@@ -20,17 +20,28 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
+/* ✅ SAME CONFIG EVERYWHERE */
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.firebasestorage.app",
+  messagingSenderId: "241512022087",
   appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+/* ✅ FORCE SESSION TO PERSIST */
+await setPersistence(auth, browserLocalPersistence);
 
 window.login = async function () {
   const password = document.getElementById("password").value;
@@ -42,10 +53,11 @@ window.login = async function () {
       password
     );
 
-    window.location.href = "media.html";
+    /* ✅ CORRECT PAGE */
+    window.location.href = "new_expanded_page.html";
 
   } catch (error) {
-    console.log(error.message); // helpful debug
+    console.log(error.message);
     document.getElementById("error").style.display = "block";
   }
 };
