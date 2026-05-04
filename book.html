@@ -6,72 +6,74 @@
 
 <style>
 #header {
-      background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
-	  background-size: 100% 100%; /* Stretches to fill width and height */
- 	  background-repeat: no-repeat;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
+  background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
 .title a {
-      color: #FFF073;
-      text-decoration: none; /* Remove underline */
-    }
+  color: #FFF073;
+  text-decoration: none;
+}
 
 .subtitle a {
-      color: grey;
-	  font-family: Courier New;
-      text-decoration: none; /* Remove underline */
+  color: grey;
+  font-family: Courier New;
+  text-decoration: none;
 }
-  body {
-    font-family: Times New Roman, sans-serif;
-    background-color: #EBE4E4;
-    margin: 0;
-    padding: 0;
-    color: #566175;
-  }
 
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
+body {
+  font-family: Times New Roman, sans-serif;
+  background-color: #EBE4E4;
+  margin: 0;
+  padding: 0;
+  color: #566175;
+}
 
-  #reading-list {
-    list-style: none;
-    padding: 0;
-  }
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
 
-  .book {
-    margin: 10px 0;
-    padding: 10px;
-  }
+#reading-list {
+  list-style: none;
+  padding: 0;
+}
 
-  .book a {
-    color: blue;
-    text-decoration: none;
-  }
+.book {
+  margin: 10px 0;
+  padding: 10px;
+}
 
-  .book a:hover {
-    color: #FFF073;
-  }
+.book a {
+  color: blue;
+  text-decoration: none;
+}
 
-  .date {
-    font-size: 0.8em;
-    color: gray;
-  }
+.book a:hover {
+  color: #FFF073;
+}
 
-  button {
-    margin-top: 5px;
-    padding: 5px 10px;
-    background: black;
-    color: white;
-    border: 1px solid white;
-    cursor: pointer;
-  }
+.date {
+  font-size: 0.8em;
+  color: gray;
+}
 
-  button:hover {
-    opacity: 0.8;
-  }
+button {
+  margin-top: 5px;
+  padding: 5px 10px;
+  background: black;
+  color: white;
+  border: 1px solid white;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.8;
+}
 </style>
 </head>
 
@@ -79,10 +81,9 @@
 
 <div class="container">
 
- <div id="header">
-      <h1 class="title"><a href="index.html">egon.td</a></h1>
-	  <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
-	  </p>
+  <div id="header">
+    <h1 class="title"><a href="index.html">egon.td</a></h1>
+    <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
   </div>
 
   <div style="text-align:center;">
@@ -91,24 +92,21 @@
 
   <h1>-- ole mole list --</h1>
 
-  <!-- ADMIN PANEL ONLY -->
+  <!-- ADMIN PANEL -->
   <div id="admin-panel" style="display:none;">
     <input type="text" id="bookTitle" placeholder="Book Title"><br>
     <input type="text" id="bookAuthor" placeholder="Author"><br>
     <input type="url" id="bookURL" placeholder="Book URL"><br>
     <button onclick="addBook()">Add Book</button>
-    <button onclick="logout()">Logout</button>
     <hr>
   </div>
 
-  <!-- BOOK LIST -->
   <div id="reading-list"></div>
 
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -119,7 +117,14 @@ import {
   doc,
   query,
   orderBy
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
@@ -132,20 +137,31 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+await setPersistence(auth, browserLocalPersistence);
+
 const col = collection(db, "books");
 
-/* ---------- AUTH ---------- */
-function isAdmin() {
-  return localStorage.getItem("isAdmin") === "true";
-}
+let isAdmin = false;
 
-/* ---------- ADMIN UI ---------- */
-function unlockAdmin() {
-  document.getElementById("admin-panel").style.display = "block";
-}
+/* AUTH */
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email === "lucioegbert18@gmail.com") {
+    isAdmin = true;
+    document.getElementById("admin-panel").style.display = "block";
+  } else {
+    isAdmin = false;
+    document.getElementById("admin-panel").style.display = "none";
+  }
 
-/* ---------- ADD BOOK ---------- */
+  loadBooks();
+});
+
+/* ADD */
 window.addBook = async function () {
+  if (!isAdmin) return;
+
   const title = document.getElementById("bookTitle").value.trim();
   const author = document.getElementById("bookAuthor").value.trim();
   const url = document.getElementById("bookURL").value.trim();
@@ -155,7 +171,7 @@ window.addBook = async function () {
       title,
       author,
       url,
-      date: new Date().toLocaleString()
+      date: new Date().toISOString()
     });
 
     document.getElementById("bookTitle").value = "";
@@ -166,7 +182,7 @@ window.addBook = async function () {
   }
 };
 
-/* ---------- LOAD BOOKS ---------- */
+/* LOAD */
 async function loadBooks() {
   const container = document.getElementById("reading-list");
   container.innerHTML = "";
@@ -186,20 +202,30 @@ async function loadBooks() {
         <a href="${b.url}" target="_blank"><strong>${b.title}</strong></a>
         by ${b.author}
       </div>
-      <div class="date">${b.date}</div>
-
-      ${isAdmin() ? `
-        <button onclick="editBook('${id}', \`${b.title}\`, \`${b.author}\`, \`${b.url}\`)">Edit</button>
-        <button onclick="deleteBook('${id}')">Delete</button>
-      ` : ""}
+      <div class="date">${new Date(b.date).toLocaleString()}</div>
     `;
+
+    if (isAdmin) {
+      const edit = document.createElement("button");
+      edit.textContent = "Edit";
+      edit.onclick = () => editBook(id, b.title, b.author, b.url);
+
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.onclick = () => deleteBook(id);
+
+      div.appendChild(edit);
+      div.appendChild(del);
+    }
 
     container.appendChild(div);
   });
 }
 
-/* ---------- EDIT ---------- */
+/* EDIT */
 window.editBook = async function (id, title, author, url) {
+  if (!isAdmin) return;
+
   const newTitle = prompt("Title:", title);
   const newAuthor = prompt("Author:", author);
   const newURL = prompt("URL:", url);
@@ -215,27 +241,14 @@ window.editBook = async function (id, title, author, url) {
   }
 };
 
-/* ---------- DELETE ---------- */
+/* DELETE */
 window.deleteBook = async function (id) {
+  if (!isAdmin) return;
+
   if (confirm("Delete this book?")) {
     await deleteDoc(doc(db, "books", id));
     loadBooks();
   }
-};
-
-/* ---------- LOGOUT ---------- */
-window.logout = function () {
-  localStorage.removeItem("isAdmin");
-  location.reload();
-};
-
-/* ---------- INIT ---------- */
-window.onload = function () {
-  if (isAdmin()) {
-    unlockAdmin();
-  }
-
-  loadBooks();
 };
 </script>
 
