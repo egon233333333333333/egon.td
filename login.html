@@ -13,7 +13,7 @@
   <input type="password" id="password" placeholder="Enter password" style="padding:10px; width:200px;">
   <br><br>
 
-  <button onclick="login()" style="padding:10px 20px;">Enter</button>
+  <button onclick="login()">Enter</button>
 
   <p id="error" style="color:red; display:none;">Wrong password</p>
 </div>
@@ -27,7 +27,6 @@ import {
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
-/* ✅ SAME CONFIG EVERYWHERE */
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
@@ -40,7 +39,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-/* ✅ FORCE SESSION TO PERSIST */
 await setPersistence(auth, browserLocalPersistence);
 
 window.login = async function () {
@@ -53,11 +51,9 @@ window.login = async function () {
       password
     );
 
-    /* ✅ CORRECT PAGE */
     window.location.href = "new_expanded_page.html";
 
   } catch (error) {
-    console.log(error.message);
     document.getElementById("error").style.display = "block";
   }
 };
