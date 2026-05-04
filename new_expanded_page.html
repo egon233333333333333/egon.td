@@ -3,24 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <title>media</title>
+
+<style>
+body {
+  font-family: Times New Roman, sans-serif;
+  background-color: #877360;
+  margin: 0;
+  padding: 0;
+  color: grey;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#header {
+  background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title a {
+  color: #FFF073;
+  text-decoration: none;
+}
+
+.subtitle a {
+  color: grey;
+  font-family: Courier New;
+  text-decoration: none;
+}
+
+.content-container {
+  border: 1px solid grey;
+  background-color: #EBE4E4;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+/* LINKS */
+a {
+  color: black;
+  text-decoration: none;
+}
+
+a:hover {
+  color: blue;
+  text-decoration: underline;
+}
+
+/* LIST */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* FORM */
+input, button {
+  font-family: Times New Roman, sans-serif;
+  padding: 6px;
+  margin: 4px 0;
+  border: 1px solid #333;
+}
+
+input {
+  width: 100%;
+  background: #f5f5f5;
+}
+
+button {
+  background: transparent;
+  cursor: pointer;
+  color: black;
+}
+
+button:hover {
+  background: brown;
+  color: white;
+}
+
+/* ADMIN PANEL */
+#admin-panel {
+  margin-bottom: 15px;
+}
+</style>
 </head>
 
-<body style="background-color:powderblue;">
+<body>
 
-<h2>curated media</h2> <a href="index.html">back to home</a><br>
-  <h4>loading list, please wait...</h4>
+<div class="container">
 
-<!-- ADMIN PANEL (hidden for guests) -->
-<div id="admin-panel" style="display:none;">
-  <form id="add-media-form">
-    <input type="text" id="media-title" placeholder="Title" required />
-    <input type="url" id="media-url" placeholder="URL" required />
-    <input type="text" id="media-category" placeholder="Category"/>
-    <button type="submit">Add</button>
-  </form>
+  <div id="header">
+    <h1 class="title"><a href="index.html">egon.td</a></h1>
+    <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
+  </div>
+
+  <div class="content-container">
+
+    <h2>curated media</h2>
+    <a href="index.html">back to home</a><br><br>
+
+    <h4>loading list, please wait...</h4>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" style="display:none;">
+      <form id="add-media-form">
+        <input type="text" id="media-title" placeholder="Title" required />
+        <input type="url" id="media-url" placeholder="URL" required />
+        <input type="text" id="media-category" placeholder="Category" />
+        <button type="submit">Add</button>
+      </form>
+      <hr>
+    </div>
+
+    <ul id="reading-list"></ul>
+
+  </div>
 </div>
-
-<ul id="reading-list"></ul>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
@@ -42,7 +152,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
   storageBucket: "egontd-b9357.firebasestorage.app",
@@ -61,9 +171,7 @@ const mediaCollection = collection(db, "mediaItems");
 let isAdmin = false;
 let mediaItems = [];
 
-/* AUTH (NO REDIRECT) */
 onAuthStateChanged(auth, (user) => {
-
   if (user && user.email === "lucioegbert18@gmail.com") {
     isAdmin = true;
     document.getElementById("admin-panel").style.display = "block";
@@ -72,10 +180,8 @@ onAuthStateChanged(auth, (user) => {
     document.getElementById("admin-panel").style.display = "none";
   }
 
-  fetchMediaItems(); // always load for guests + admin
+  fetchMediaItems();
 });
-
-/* CRUD (PROTECTED) */
 
 async function fetchMediaItems() {
   const snapshot = await getDocs(mediaCollection);
@@ -103,8 +209,6 @@ async function deleteMediaItem(id) {
   await deleteDoc(doc(db, "mediaItems", id));
   fetchMediaItems();
 }
-
-/* RENDER */
 
 function render() {
   const list = document.getElementById("reading-list");
@@ -144,8 +248,6 @@ function render() {
     list.appendChild(li);
   });
 }
-
-/* FORM */
 
 document.getElementById("add-media-form").addEventListener("submit", (e) => {
   e.preventDefault();
