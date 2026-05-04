@@ -5,6 +5,19 @@
 <title>ole-mole reading list</title>
 
 <style>
+body {
+  font-family: Times New Roman, sans-serif;
+  background-color: #877360;
+  margin: 0;
+  padding: 0;
+  color: grey;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
 #header {
   background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
   background-size: 100% 100%;
@@ -25,17 +38,12 @@
   text-decoration: none;
 }
 
-body {
-  font-family: Times New Roman, sans-serif;
+.content-container {
+  border: 1px solid grey;
   background-color: #EBE4E4;
-  margin: 0;
-  padding: 0;
-  color: #566175;
-}
-
-.container {
-  max-width: 800px;
-  margin: 0 auto;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: left;
 }
 
 #reading-list {
@@ -49,12 +57,12 @@ body {
 }
 
 .book a {
-  color: blue;
+  color: black;
   text-decoration: none;
 }
 
 .book a:hover {
-  color: #FFF073;
+  color: blue;
 }
 
 .date {
@@ -65,14 +73,19 @@ body {
 button {
   margin-top: 5px;
   padding: 5px 10px;
-  background: black;
-  color: white;
-  border: 1px solid white;
+  background: transparent;
+  color: black;
+  border: 1px solid #333;
   cursor: pointer;
 }
 
 button:hover {
-  opacity: 0.8;
+  background: brown;
+  color: white;
+}
+
+#admin-panel {
+  margin-bottom: 10px;
 }
 </style>
 </head>
@@ -86,23 +99,26 @@ button:hover {
     <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
   </div>
 
-  <div style="text-align:center;">
-    <img src="https://i.pinimg.com/736x/54/42/c3/5442c369575d6878995eebe6b4a82368.jpg" width="300">
+  <div class="content-container">
+
+    <div style="text-align:center;">
+      <img src="https://i.pinimg.com/736x/54/42/c3/5442c369575d6878995eebe6b4a82368.jpg" width="300">
+    </div>
+
+    <h1>-- ole mole list --</h1>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" style="display:none;">
+      <input type="text" id="bookTitle" placeholder="Book Title"><br>
+      <input type="text" id="bookAuthor" placeholder="Author"><br>
+      <input type="url" id="bookURL" placeholder="Book URL"><br>
+      <button onclick="addBook()">Add Book</button>
+      <hr>
+    </div>
+
+    <div id="reading-list"></div>
+
   </div>
-
-  <h1>-- ole mole list --</h1>
-
-  <!-- ADMIN PANEL -->
-  <div id="admin-panel" style="display:none;">
-    <input type="text" id="bookTitle" placeholder="Book Title"><br>
-    <input type="text" id="bookAuthor" placeholder="Author"><br>
-    <input type="url" id="bookURL" placeholder="Book URL"><br>
-    <button onclick="addBook()">Add Book</button>
-    <hr>
-  </div>
-
-  <div id="reading-list"></div>
-
 </div>
 
 <script type="module">
@@ -145,7 +161,6 @@ const col = collection(db, "books");
 
 let isAdmin = false;
 
-/* AUTH */
 onAuthStateChanged(auth, (user) => {
   if (user && user.email === "lucioegbert18@gmail.com") {
     isAdmin = true;
@@ -158,7 +173,6 @@ onAuthStateChanged(auth, (user) => {
   loadBooks();
 });
 
-/* ADD */
 window.addBook = async function () {
   if (!isAdmin) return;
 
@@ -182,7 +196,6 @@ window.addBook = async function () {
   }
 };
 
-/* LOAD */
 async function loadBooks() {
   const container = document.getElementById("reading-list");
   container.innerHTML = "";
@@ -222,7 +235,6 @@ async function loadBooks() {
   });
 }
 
-/* EDIT */
 window.editBook = async function (id, title, author, url) {
   if (!isAdmin) return;
 
@@ -241,7 +253,6 @@ window.editBook = async function (id, title, author, url) {
   }
 };
 
-/* DELETE */
 window.deleteBook = async function (id) {
   if (!isAdmin) return;
 
