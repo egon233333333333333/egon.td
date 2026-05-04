@@ -5,49 +5,49 @@
 <title>ramblings</title>
 
 <style>
-  body {
-    background: black;
-    color: white;
-    font-family: monospace;
-    margin: 0;
-    padding: 0;
-  }
+body {
+  background: black;
+  color: white;
+  font-family: monospace;
+  margin: 0;
+  padding: 0;
+}
 
-  .container {
-    max-width: 600px;
-    padding: 20px;
-  }
+.container {
+  max-width: 600px;
+  padding: 20px;
+}
 
-  textarea, button {
-    background: black;
-    color: white;
-    border: 1px solid white;
-    font-family: monospace;
-    padding: 6px;
-    margin-top: 5px;
-  }
+textarea, button {
+  background: black;
+  color: white;
+  border: 1px solid white;
+  font-family: monospace;
+  padding: 6px;
+  margin-top: 5px;
+}
 
-  textarea {
-    width: 100%;
-  }
+textarea {
+  width: 100%;
+}
 
-  .thought {
-    margin-bottom: 15px;
-  }
+.thought {
+  margin-bottom: 15px;
+}
 
-  .date {
-    font-size: 0.8em;
-    color: #aaa;
-  }
+.date {
+  font-size: 0.8em;
+  color: #aaa;
+}
 
-  a {
-    color: yellow;
-    text-decoration: none;
-  }
+a {
+  color: yellow;
+  text-decoration: none;
+}
 
-  a:hover {
-    text-decoration: underline;
-  }
+a:hover {
+  text-decoration: underline;
+}
 </style>
 </head>
 
@@ -55,25 +55,22 @@
 
 <div class="container">
 
-  <h1><a href="index.html" style="color:yellow;">back to home</a></h1>
-  <h1 style="color:yellow;">ramblings</h1>
+  <h1><a href="index.html">back to home</a></h1>
+  <h1>ramblings</h1>
 
-  <!-- ADMIN PANEL (hidden by default) -->
+  <!-- ADMIN PANEL -->
   <div id="admin-panel" style="display:none;">
     <textarea id="thoughtText" rows="3" placeholder="Write your thought..."></textarea><br>
     <button onclick="addThought()">Add Thought</button>
-    <button onclick="logout()">Logout</button>
     <hr>
   </div>
 
-  <!-- PUBLIC THOUGHTS -->
   <div id="thoughts"></div>
 
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -84,7 +81,14 @@ import {
   doc,
   query,
   orderBy
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
@@ -97,26 +101,38 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+await setPersistence(auth, browserLocalPersistence);
+
 const col = collection(db, "thoughts");
 
-/* ---------- AUTH ---------- */
-function isAdmin() {
-  return localStorage.getItem("isAdmin") === "true";
-}
+let isAdmin = false;
 
-/* ---------- SHOW ADMIN UI IF LOGGED IN ---------- */
-function unlockAdmin() {
-  document.getElementById("admin-panel").style.display = "block";
-}
+/* AUTH */
+onAuthStateChanged(auth, (user) => {
 
-/* ---------- ADD ---------- */
+  if (user && user.email === "lucioegbert18@gmail.com") {
+    isAdmin = true;
+    document.getElementById("admin-panel").style.display = "block";
+  } else {
+    isAdmin = false;
+    document.getElementById("admin-panel").style.display = "none";
+  }
+
+  loadThoughts();
+});
+
+/* ADD */
 window.addThought = async function () {
+  if (!isAdmin) return;
+
   const text = document.getElementById("thoughtText").value.trim();
 
   if (text) {
     await addDoc(col, {
       text,
-      date: new Date().toLocaleString()
+      date: new Date().toISOString()
     });
 
     document.getElementById("thoughtText").value = "";
@@ -124,7 +140,7 @@ window.addThought = async function () {
   }
 };
 
-/* ---------- LOAD ---------- */
+/* LOAD */
 async function loadThoughts() {
   const container = document.getElementById("thoughts");
   container.innerHTML = "";
@@ -141,20 +157,30 @@ async function loadThoughts() {
 
     div.innerHTML = `
       <div>${t.text}</div>
-      <div class="date">${t.date}</div>
-
-      ${isAdmin() ? `
-        <button onclick="editThought('${id}', \`${t.text.replace(/`/g, "\\`")}\`)">Edit</button>
-        <button onclick="deleteThought('${id}')">Delete</button>
-      ` : ""}
+      <div class="date">${new Date(t.date).toLocaleString()}</div>
     `;
+
+    if (isAdmin) {
+      const edit = document.createElement("button");
+      edit.textContent = "Edit";
+      edit.onclick = () => editThought(id, t.text);
+
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.onclick = () => deleteThought(id);
+
+      div.appendChild(edit);
+      div.appendChild(del);
+    }
 
     container.appendChild(div);
   });
 }
 
-/* ---------- EDIT ---------- */
+/* EDIT */
 window.editThought = async function (id, currentText) {
+  if (!isAdmin) return;
+
   const newText = prompt("Edit:", currentText);
 
   if (newText !== null) {
@@ -166,27 +192,14 @@ window.editThought = async function (id, currentText) {
   }
 };
 
-/* ---------- DELETE ---------- */
+/* DELETE */
 window.deleteThought = async function (id) {
+  if (!isAdmin) return;
+
   if (confirm("Delete this thought?")) {
     await deleteDoc(doc(db, "thoughts", id));
     loadThoughts();
   }
-};
-
-/* ---------- LOGOUT ---------- */
-window.logout = function () {
-  localStorage.removeItem("isAdmin");
-  location.reload();
-};
-
-/* ---------- INIT ---------- */
-window.onload = function () {
-  if (isAdmin()) {
-    unlockAdmin();
-  }
-
-  loadThoughts();
 };
 </script>
 
