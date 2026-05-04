@@ -36,24 +36,16 @@ window.login = async function () {
   const password = document.getElementById("password").value;
 
   try {
-  await signInWithEmailAndPassword(
-    auth,
-    "lucioegbert18@gmail.com",
-    password
-  );
-
-  // ✅ ADD THIS LINE
-  localStorage.setItem("isAdmin", "true");
-
-  window.location.href = "media.html";
-
-} catch (error) {
-  document.getElementById("error").style.display = "block";
-}
+    await signInWithEmailAndPassword(
+      auth,
+      "lucioegbert18@gmail.com",
+      password
+    );
 
     window.location.href = "media.html";
 
   } catch (error) {
+    console.log(error.message); // helpful debug
     document.getElementById("error").style.display = "block";
   }
 };
