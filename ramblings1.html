@@ -1,285 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>ramblings</title>
-
-<style>
-body {
-  font-family: Times New Roman, sans-serif;
-  background-color: #877360;
-  margin: 0;
-  padding: 0;
-  color: grey;
-}
-
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-#header {
-  background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  padding: 20px;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.title a {
-  color: #FFF073;
-  text-decoration: none;
-}
-
-.subtitle a {
-  color: grey;
-  font-family: Courier New;
-  text-decoration: none;
-}
-
-.content-container {
-  border: 1px solid grey;
-  background-color: #EBE4E4;
-  padding: 20px;
-  margin-top: 20px;
-  text-align: left;
-}
-
-/* LINKS */
-a {
-  color: black;
-  text-decoration: none;
-}
-
-/* ADMIN AREA */
-textarea, button {
-  font-family: Times New Roman, sans-serif;
-  border: 1px solid #333;
-  padding: 6px;
-  margin-top: 5px;
-}
-
-textarea {
-  width: 100%;
-  background: #f5f5f5;
-}
-
-button {
-  background: transparent;
-  color: black;
-  cursor: pointer;
-}
-
-button:hover {
-  background: brown;
-  color: white;
-}
-
-/* THOUGHT BLOCKS */
-.thought {
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-.date {
-  font-size: 0.8em;
-  color: gray;
-}
-
-#admin-panel {
-  margin-bottom: 15px;
-}
-</style>
+<link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>media</title>
 </head>
 
-<body>
+<body style="background-color:powderblue;">
 
-<div class="container">
+<h2>curated media</h2>
 
-  <div id="header">
-    <h1 class="title"><a href="index.html">egon.td</a></h1>
-    <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
-  </div>
+<h4>the list is loading...please wait...it takes a minute....</h4>
+  
+<!-- ADMIN CONTROLS ONLY (hidden by default) -->
+<div id="admin-panel" style="display:none; margin-bottom:20px;">
 
-  <div class="content-container">
+  <form id="add-media-form">
+    <input type="text" id="media-title" placeholder="Enter title" required />
+    <input type="url" id="media-url" placeholder="Enter URL" required />
+    <input type="text" id="media-category" placeholder="Enter category (optional)"/>
+    <button type="submit">Add Media</button>
+  </form>
 
-    <h1>ramblings</h1>
-
-    <p><a href="index.html">back to home</a></p>
-
-    <!-- ADMIN PANEL -->
-    <div id="admin-panel" style="display:none;">
-      <textarea id="thoughtText" rows="3" placeholder="Write your thought..."></textarea><br>
-      <button onclick="addThought()">Add Thought</button>
-      <hr>
-    </div>
-
-    <div id="thoughts"></div>
-
-  </div>
+  <button onclick="logout()">Logout</button>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+<ul id="reading-list"></ul>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import {
   getFirestore,
   collection,
-  addDoc,
   getDocs,
+  addDoc,
   updateDoc,
   deleteDoc,
-  doc,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  doc
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+const auth = getAuth(app);
+  
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
-  storageBucket: "egontd-b9357.appspot.com",
+  storageBucket: "egontd-b9357.firebasestorage.app",
   messagingSenderId: "241512022087",
   appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
+const mediaCollection = collection(db, "mediaItems");
 
-const col = collection(db, "thoughts");
+let mediaItems = [];
 
-let isAdmin = false;
+/* ---------- AUTH CHECK ---------- */
 
-/* AUTH CHECK */
-onAuthStateChanged(auth, async (user) => {
 
-  console.log("AUTH:", user);
+/* ---------- UNLOCK ADMIN UI ---------- */
+function unlockAdmin() {
+  document.getElementById("admin-panel").style.display = "block";
+}
 
-  if (
-    user &&
-    user.email &&
-    user.email.toLowerCase() === "lucioegbert18@gmail.com"
-  ) {
-    isAdmin = true;
-    document.getElementById("admin-panel").style.display = "block";
-  } else {
-    isAdmin = false;
-    document.getElementById("admin-panel").style.display = "none";
-  }
+/* ---------- FIREBASE ---------- */
+async function fetchMediaItems() {
+  const snapshot = await getDocs(mediaCollection);
+  mediaItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+}
 
-  await loadThoughts();
-});
+async function addMediaItem(title, url, category="") {
+  await addDoc(mediaCollection, { title, url, category, isFavorite:false });
+  fetchMediaItems();
+}
 
-/* ADD */
-window.addThought = async function () {
+async function updateMediaItem(id, updates) {
+  await updateDoc(doc(db,"mediaItems",id), updates);
+  fetchMediaItems();
+}
 
-  if (!isAdmin) return;
+async function deleteMediaItem(id) {
+  await deleteDoc(doc(db,"mediaItems",id));
+  fetchMediaItems();
+}
 
-  const text = document.getElementById("thoughtText").value.trim();
+/* ---------- RENDER LIST ---------- */
+function render() {
+  const list = document.getElementById("reading-list");
+  list.innerHTML = "";
 
-  if (!text) return;
+  mediaItems.forEach(item => {
+    const li = document.createElement("li");
 
-  await addDoc(col, {
-    text,
-    date: new Date().toISOString()
-  });
+    const a = document.createElement("a");
+    a.href = item.url;
+    a.textContent = item.title;
+    a.target = "_blank";
+    li.appendChild(a);
 
-  document.getElementById("thoughtText").value = "";
-
-  await loadThoughts();
-};
-
-/* LOAD */
-async function loadThoughts() {
-
-  const container = document.getElementById("thoughts");
-
-  container.innerHTML = "";
-
-  const q = query(col, orderBy("date", "desc"));
-
-  const snapshot = await getDocs(q);
-
-  snapshot.forEach((d) => {
-
-    const t = d.data();
-
-    const id = d.id;
-
-    const div = document.createElement("div");
-
-    div.className = "thought";
-
-    div.innerHTML = `
-      <div>${t.text}</div>
-      <div class="date">
-        ${new Date(t.date).toLocaleString()}
-      </div>
-    `;
-
-    /* ADMIN BUTTONS */
-    if (isAdmin) {
-
-      const editBtn = document.createElement("button");
-
-      editBtn.textContent = "Edit";
-
-      editBtn.onclick = () => {
-        editThought(id, t.text);
-      };
-
-      const deleteBtn = document.createElement("button");
-
-      deleteBtn.textContent = "Delete";
-
-      deleteBtn.onclick = () => {
-        deleteThought(id);
-      };
-
-      div.appendChild(editBtn);
-
-      div.appendChild(deleteBtn);
+    if (item.category) {
+      const c = document.createElement("span");
+      c.textContent = " [" + item.category + "]";
+      c.style.color = "gray";
+      li.appendChild(c);
     }
 
-    container.appendChild(div);
+    /* ADMIN ONLY BUTTONS */
+    if (auth.currentUser && auth.currentUser.email === "lucioegbert18@gmail.com") {
+
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.style.marginLeft = "10px";
+      del.onclick = () => deleteMediaItem(item.id);
+      li.appendChild(del);
+
+      const edit = document.createElement("button");
+      edit.textContent = "Edit Category";
+      edit.style.marginLeft = "5px";
+      edit.onclick = () => {
+        const newCat = prompt("New category:", item.category || "");
+        if (newCat !== null) {
+          updateMediaItem(item.id, { category: newCat });
+        }
+      };
+      li.appendChild(edit);
+    }
+
+    list.appendChild(li);
   });
 }
 
-/* EDIT */
-window.editThought = async function (id, currentText) {
+/* ---------- FORM ---------- */
+document.getElementById("add-media-form").addEventListener("submit", e => {
+  e.preventDefault();
 
-  if (!isAdmin) return;
+  addMediaItem(
+    document.getElementById("media-title").value,
+    document.getElementById("media-url").value,
+    document.getElementById("media-category").value
+  );
+});
 
-  const newText = prompt("Edit:", currentText);
-
-  if (newText === null) return;
-
-  await updateDoc(doc(db, "thoughts", id), {
-    text: newText.trim()
+/* ---------- LOGOUT ---------- */
+window.logout = function () {
+  signOut(auth).then(() => {
+    location.reload();
   });
-
-  await loadThoughts();
 };
 
-/* DELETE */
-window.deleteThought = async function (id) {
+/* ---------- INIT ---------- */
+window.addEventListener("load", () => {
+  onAuthStateChanged(auth, (user) => {
 
-  if (!isAdmin) return;
+    if (user && user.email === "lucioegbert18@gmail.com") {
+      unlockAdmin();
+    }
 
-  if (!confirm("Delete this thought?")) return;
-
-  await deleteDoc(doc(db, "thoughts", id));
-
-  await loadThoughts();
-};
+    // ✅ load data AFTER Firebase restores login session
+    fetchMediaItems();
+  });
+});
 </script>
 
 </body>
