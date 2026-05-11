@@ -52,7 +52,6 @@ a {
   text-decoration: none;
 }
 
-
 /* ADMIN AREA */
 textarea, button {
   font-family: Times New Roman, sans-serif;
@@ -99,7 +98,6 @@ button:hover {
 
 <div class="container">
 
-  <!-- HEADER (same template style) -->
   <div id="header">
     <h1 class="title"><a href="index.html">egon.td</a></h1>
     <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
@@ -125,6 +123,7 @@ button:hover {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -139,13 +138,11 @@ import {
 
 import {
   getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
   storageBucket: "egontd-b9357.appspot.com",
@@ -157,14 +154,20 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-await setPersistence(auth, browserLocalPersistence);
-
 const col = collection(db, "thoughts");
 
 let isAdmin = false;
 
-onAuthStateChanged(auth, (user) => {
-  if (user && user.email === "lucioegbert18@gmail.com") {
+/* AUTH CHECK */
+onAuthStateChanged(auth, async (user) => {
+
+  console.log("AUTH:", user);
+
+  if (
+    user &&
+    user.email &&
+    user.email.toLowerCase() === "lucioegbert18@gmail.com"
+  ) {
     isAdmin = true;
     document.getElementById("admin-panel").style.display = "block";
   } else {
@@ -172,82 +175,110 @@ onAuthStateChanged(auth, (user) => {
     document.getElementById("admin-panel").style.display = "none";
   }
 
-  loadThoughts();
+  await loadThoughts();
 });
 
+/* ADD */
 window.addThought = async function () {
+
   if (!isAdmin) return;
 
   const text = document.getElementById("thoughtText").value.trim();
 
-  if (text) {
-    await addDoc(col, {
-      text,
-      date: new Date().toISOString()
-    });
+  if (!text) return;
 
-    document.getElementById("thoughtText").value = "";
-    loadThoughts();
-  }
+  await addDoc(col, {
+    text,
+    date: new Date().toISOString()
+  });
+
+  document.getElementById("thoughtText").value = "";
+
+  await loadThoughts();
 };
 
+/* LOAD */
 async function loadThoughts() {
+
   const container = document.getElementById("thoughts");
+
   container.innerHTML = "";
 
   const q = query(col, orderBy("date", "desc"));
+
   const snapshot = await getDocs(q);
 
   snapshot.forEach((d) => {
+
     const t = d.data();
+
     const id = d.id;
 
     const div = document.createElement("div");
+
     div.className = "thought";
 
     div.innerHTML = `
       <div>${t.text}</div>
-      <div class="date">${new Date(t.date).toLocaleString()}</div>
+      <div class="date">
+        ${new Date(t.date).toLocaleString()}
+      </div>
     `;
 
+    /* ADMIN BUTTONS */
     if (isAdmin) {
-      const edit = document.createElement("button");
-      edit.textContent = "Edit";
-      edit.onclick = () => editThought(id, t.text);
 
-      const del = document.createElement("button");
-      del.textContent = "Delete";
-      del.onclick = () => deleteThought(id);
+      const editBtn = document.createElement("button");
 
-      div.appendChild(edit);
-      div.appendChild(del);
+      editBtn.textContent = "Edit";
+
+      editBtn.onclick = () => {
+        editThought(id, t.text);
+      };
+
+      const deleteBtn = document.createElement("button");
+
+      deleteBtn.textContent = "Delete";
+
+      deleteBtn.onclick = () => {
+        deleteThought(id);
+      };
+
+      div.appendChild(editBtn);
+
+      div.appendChild(deleteBtn);
     }
 
     container.appendChild(div);
   });
 }
 
+/* EDIT */
 window.editThought = async function (id, currentText) {
+
   if (!isAdmin) return;
 
   const newText = prompt("Edit:", currentText);
 
-  if (newText !== null) {
-    await updateDoc(doc(db, "thoughts", id), {
-      text: newText
-    });
+  if (newText === null) return;
 
-    loadThoughts();
-  }
+  await updateDoc(doc(db, "thoughts", id), {
+    text: newText.trim()
+  });
+
+  await loadThoughts();
 };
 
+/* DELETE */
 window.deleteThought = async function (id) {
+
   if (!isAdmin) return;
 
-  if (confirm("Delete this thought?")) {
-    await deleteDoc(doc(db, "thoughts", id));
-    loadThoughts();
-  }
+  if (!confirm("Delete this thought?")) return;
+
+  await deleteDoc(doc(db, "thoughts", id));
+
+  await loadThoughts();
 };
 </script>
 
