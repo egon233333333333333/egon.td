@@ -123,6 +123,7 @@ button:hover {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -137,9 +138,7 @@ import {
 
 import {
   getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -152,116 +151,162 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
 
-await setPersistence(auth, browserLocalPersistence);
+const db = getFirestore(app);
+
+const auth = getAuth(app);
 
 const col = collection(db, "books");
 
 let isAdmin = false;
 
-onAuthStateChanged(auth, (user) => {
-  if (user && user.email === "lucioegbert18@gmail.com") {
+/* AUTH */
+onAuthStateChanged(auth, async (user) => {
+
+  console.log("AUTH:", user);
+
+  if (
+    user &&
+    user.email &&
+    user.email.toLowerCase() === "lucioegbert18@gmail.com"
+  ) {
     isAdmin = true;
+
     document.getElementById("admin-panel").style.display = "block";
+
   } else {
+
     isAdmin = false;
+
     document.getElementById("admin-panel").style.display = "none";
   }
 
-  loadBooks();
+  await loadBooks();
 });
 
+/* ADD */
 window.addBook = async function () {
+
   if (!isAdmin) return;
 
   const title = document.getElementById("bookTitle").value.trim();
+
   const author = document.getElementById("bookAuthor").value.trim();
+
   const url = document.getElementById("bookURL").value.trim();
 
-  if (title && author && url) {
-    await addDoc(col, {
-      title,
-      author,
-      url,
-      date: new Date().toISOString()
-    });
+  if (!title || !author || !url) return;
 
-    document.getElementById("bookTitle").value = "";
-    document.getElementById("bookAuthor").value = "";
-    document.getElementById("bookURL").value = "";
+  await addDoc(col, {
+    title,
+    author,
+    url,
+    date: new Date().toISOString()
+  });
 
-    loadBooks();
-  }
+  document.getElementById("bookTitle").value = "";
+
+  document.getElementById("bookAuthor").value = "";
+
+  document.getElementById("bookURL").value = "";
+
+  await loadBooks();
 };
 
+/* LOAD */
 async function loadBooks() {
+
   const container = document.getElementById("reading-list");
+
   container.innerHTML = "";
 
   const q = query(col, orderBy("date", "desc"));
+
   const snapshot = await getDocs(q);
 
   snapshot.forEach((d) => {
+
     const b = d.data();
+
     const id = d.id;
 
     const div = document.createElement("div");
+
     div.className = "book";
 
     div.innerHTML = `
       <div>
-        <a href="${b.url}" target="_blank"><strong>${b.title}</strong></a>
+        <a href="${b.url}" target="_blank">
+          <strong>${b.title}</strong>
+        </a>
         by ${b.author}
       </div>
-      <div class="date">${new Date(b.date).toLocaleString()}</div>
+
+      <div class="date">
+        ${new Date(b.date).toLocaleString()}
+      </div>
     `;
 
     if (isAdmin) {
-      const edit = document.createElement("button");
-      edit.textContent = "Edit";
-      edit.onclick = () => editBook(id, b.title, b.author, b.url);
 
-      const del = document.createElement("button");
-      del.textContent = "Delete";
-      del.onclick = () => deleteBook(id);
+      const editBtn = document.createElement("button");
 
-      div.appendChild(edit);
-      div.appendChild(del);
+      editBtn.textContent = "Edit";
+
+      editBtn.onclick = () => {
+        editBook(id, b.title, b.author, b.url);
+      };
+
+      const deleteBtn = document.createElement("button");
+
+      deleteBtn.textContent = "Delete";
+
+      deleteBtn.onclick = () => {
+        deleteBook(id);
+      };
+
+      div.appendChild(editBtn);
+
+      div.appendChild(deleteBtn);
     }
 
     container.appendChild(div);
   });
 }
 
+/* EDIT */
 window.editBook = async function (id, title, author, url) {
+
   if (!isAdmin) return;
 
   const newTitle = prompt("Title:", title);
+
   const newAuthor = prompt("Author:", author);
+
   const newURL = prompt("URL:", url);
 
-  if (newTitle && newAuthor && newURL) {
-    await updateDoc(doc(db, "books", id), {
-      title: newTitle,
-      author: newAuthor,
-      url: newURL
-    });
+  if (!newTitle || !newAuthor || !newURL) return;
 
-    loadBooks();
-  }
+  await updateDoc(doc(db, "books", id), {
+    title: newTitle.trim(),
+    author: newAuthor.trim(),
+    url: newURL.trim()
+  });
+
+  await loadBooks();
 };
 
+/* DELETE */
 window.deleteBook = async function (id) {
+
   if (!isAdmin) return;
 
-  if (confirm("Delete this book?")) {
-    await deleteDoc(doc(db, "books", id));
-    loadBooks();
-  }
+  if (!confirm("Delete this book?")) return;
+
+  await deleteDoc(doc(db, "books", id));
+
+  await loadBooks();
 };
 </script>
-
 </body>
 </html>
