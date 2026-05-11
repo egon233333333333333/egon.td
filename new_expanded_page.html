@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -129,8 +131,7 @@ button:hover {
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 
 import {
   getFirestore,
@@ -140,93 +141,122 @@ import {
   updateDoc,
   deleteDoc,
   doc
-}
-from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 import {
   getAuth,
   onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
-  storageBucket: "egontd-b9357.appspot.com", // FIXED
+  storageBucket: "egontd-b9357.firebasestorage.app",
   messagingSenderId: "241512022087",
   appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const col = collection(db, "mediaItems");
+const mediaCollection = collection(db, "mediaItems");
 
 let isAdmin = false;
+let currentUser = null;
 
-/* AUTH (MATCH RAMBLINGS STYLE) */
+/* AUTH (FIXED PROPERLY) */
 onAuthStateChanged(auth, async (user) => {
 
   console.log("AUTH:", user);
 
-  if (
+  currentUser = user;
+
+  /* IMPORTANT: match FIRESTORE RULES exactly */
+  isAdmin =
     user &&
     user.email &&
-    user.email.toLowerCase() === "lucioegbert18@gmail.com"
-  ) {
-    isAdmin = true;
-    document.getElementById("admin-panel").style.display = "block";
-  } else {
-    isAdmin = false;
-    document.getElementById("admin-panel").style.display = "none";
-  }
+    user.email.toLowerCase() === "lucioegbert18@gmail.com";
 
-  await loadMedia();
+  document.getElementById("admin-panel").style.display =
+    isAdmin ? "block" : "none";
+
+  await fetchMediaItems();
 });
 
+/* FETCH */
+async function fetchMediaItems() {
+
+  const snapshot = await getDocs(mediaCollection);
+
+  const mediaItems = snapshot.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
+
+  render(mediaItems);
+}
+
 /* ADD */
-window.addMedia = async function () {
+async function addMediaItem(title, url, category) {
 
   if (!isAdmin) return;
 
-  const title = document.getElementById("media-title").value.trim();
-  const url = document.getElementById("media-url").value.trim();
-  const category = document.getElementById("media-category").value.trim();
-
-  if (!title || !url) return;
-
-  await addDoc(col, {
+  await addDoc(mediaCollection, {
     title,
     url,
     category,
     date: new Date().toISOString()
   });
 
-  await loadMedia();
-};
+  await fetchMediaItems();
+}
 
-/* LOAD */
-async function loadMedia() {
+/* UPDATE */
+async function updateMediaItem(id, updates) {
+
+  if (!isAdmin) return;
+
+  await updateDoc(doc(db, "mediaItems", id), updates);
+
+  await fetchMediaItems();
+}
+
+/* DELETE */
+async function deleteMediaItem(id) {
+
+  if (!isAdmin) return;
+
+  await deleteDoc(doc(db, "mediaItems", id));
+
+  await fetchMediaItems();
+}
+
+/* RENDER */
+function render(mediaItems) {
 
   const list = document.getElementById("reading-list");
 
   list.innerHTML = "";
 
-  const snapshot = await getDocs(col);
-
-  snapshot.forEach((d) => {
-
-    const item = d.data();
-    const id = d.id;
+  mediaItems.forEach(item => {
 
     const li = document.createElement("li");
 
-    li.innerHTML = `
-      <a href="${item.url}" target="_blank">${item.title}</a>
-      ${item.category ? `[${item.category}]` : ""}
-    `;
+    const a = document.createElement("a");
+    a.href = item.url;
+    a.textContent = item.title;
+    a.target = "_blank";
+
+    li.appendChild(a);
+
+    if (item.category) {
+      const span = document.createElement("span");
+      span.textContent = ` [${item.category}]`;
+      li.appendChild(span);
+    }
 
     if (isAdmin) {
 
@@ -237,29 +267,22 @@ async function loadMedia() {
 
         const newTitle = prompt("Title:", item.title);
         const newURL = prompt("URL:", item.url);
-        const newCat = prompt("Category:", item.category || "");
+        const newCategory = prompt("Category:", item.category || "");
 
         if (newTitle === null || newURL === null) return;
 
-        await updateDoc(doc(db, "mediaItems", id), {
+        await updateMediaItem(item.id, {
           title: newTitle.trim(),
           url: newURL.trim(),
-          category: newCat.trim()
+          category: newCategory.trim()
         });
-
-        await loadMedia();
       };
 
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "Delete";
 
       deleteBtn.onclick = async () => {
-
-        if (!confirm("Delete this item?")) return;
-
-        await deleteDoc(doc(db, "mediaItems", id));
-
-        await loadMedia();
+        await deleteMediaItem(item.id);
       };
 
       li.appendChild(editBtn);
@@ -269,6 +292,21 @@ async function loadMedia() {
     list.appendChild(li);
   });
 }
+
+/* FORM */
+document.getElementById("add-media-form")
+.addEventListener("submit", async (e) => {
+
+  e.preventDefault();
+
+  await addMediaItem(
+    document.getElementById("media-title").value,
+    document.getElementById("media-url").value,
+    document.getElementById("media-category").value
+  );
+
+  e.target.reset();
+});
 
 </script>
 </body>
