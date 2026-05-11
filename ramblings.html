@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,34 +123,31 @@ button:hover {
   </div>
 </div>
 
-
 <script type="module">
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 
 import {
   getFirestore,
   collection,
-  getDocs,
   addDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
-  doc
-}
-from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  doc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 import {
   getAuth,
   onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
-  storageBucket: "egontd-b9357.appspot.com", // FIXED
+  storageBucket: "egontd-b9357.appspot.com",
   messagingSenderId: "241512022087",
   appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
 };
@@ -157,11 +156,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const col = collection(db, "mediaItems");
+const col = collection(db, "thoughts");
 
 let isAdmin = false;
 
-/* AUTH (MATCH RAMBLINGS STYLE) */
+/* AUTH CHECK */
 onAuthStateChanged(auth, async (user) => {
 
   console.log("AUTH:", user);
@@ -178,93 +177,111 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("admin-panel").style.display = "none";
   }
 
-  await loadMedia();
+  await loadThoughts();
 });
 
 /* ADD */
-window.addMedia = async function () {
+window.addThought = async function () {
 
   if (!isAdmin) return;
 
-  const title = document.getElementById("media-title").value.trim();
-  const url = document.getElementById("media-url").value.trim();
-  const category = document.getElementById("media-category").value.trim();
+  const text = document.getElementById("thoughtText").value.trim();
 
-  if (!title || !url) return;
+  if (!text) return;
 
   await addDoc(col, {
-    title,
-    url,
-    category,
+    text,
     date: new Date().toISOString()
   });
 
-  await loadMedia();
+  document.getElementById("thoughtText").value = "";
+
+  await loadThoughts();
 };
 
 /* LOAD */
-async function loadMedia() {
+async function loadThoughts() {
 
-  const list = document.getElementById("reading-list");
+  const container = document.getElementById("thoughts");
 
-  list.innerHTML = "";
+  container.innerHTML = "";
 
-  const snapshot = await getDocs(col);
+  const q = query(col, orderBy("date", "desc"));
+
+  const snapshot = await getDocs(q);
 
   snapshot.forEach((d) => {
 
-    const item = d.data();
+    const t = d.data();
+
     const id = d.id;
 
-    const li = document.createElement("li");
+    const div = document.createElement("div");
 
-    li.innerHTML = `
-      <a href="${item.url}" target="_blank">${item.title}</a>
-      ${item.category ? `[${item.category}]` : ""}
+    div.className = "thought";
+
+    div.innerHTML = `
+      <div>${t.text}</div>
+      <div class="date">
+        ${new Date(t.date).toLocaleString()}
+      </div>
     `;
 
+    /* ADMIN BUTTONS */
     if (isAdmin) {
 
       const editBtn = document.createElement("button");
+
       editBtn.textContent = "Edit";
 
-      editBtn.onclick = async () => {
-
-        const newTitle = prompt("Title:", item.title);
-        const newURL = prompt("URL:", item.url);
-        const newCat = prompt("Category:", item.category || "");
-
-        if (newTitle === null || newURL === null) return;
-
-        await updateDoc(doc(db, "mediaItems", id), {
-          title: newTitle.trim(),
-          url: newURL.trim(),
-          category: newCat.trim()
-        });
-
-        await loadMedia();
+      editBtn.onclick = () => {
+        editThought(id, t.text);
       };
 
       const deleteBtn = document.createElement("button");
+
       deleteBtn.textContent = "Delete";
 
-      deleteBtn.onclick = async () => {
-
-        if (!confirm("Delete this item?")) return;
-
-        await deleteDoc(doc(db, "mediaItems", id));
-
-        await loadMedia();
+      deleteBtn.onclick = () => {
+        deleteThought(id);
       };
 
-      li.appendChild(editBtn);
-      li.appendChild(deleteBtn);
+      div.appendChild(editBtn);
+
+      div.appendChild(deleteBtn);
     }
 
-    list.appendChild(li);
+    container.appendChild(div);
   });
 }
 
+/* EDIT */
+window.editThought = async function (id, currentText) {
+
+  if (!isAdmin) return;
+
+  const newText = prompt("Edit:", currentText);
+
+  if (newText === null) return;
+
+  await updateDoc(doc(db, "thoughts", id), {
+    text: newText.trim()
+  });
+
+  await loadThoughts();
+};
+
+/* DELETE */
+window.deleteThought = async function (id) {
+
+  if (!isAdmin) return;
+
+  if (!confirm("Delete this thought?")) return;
+
+  await deleteDoc(doc(db, "thoughts", id));
+
+  await loadThoughts();
+};
 </script>
 
 </body>
