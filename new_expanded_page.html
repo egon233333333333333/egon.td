@@ -129,6 +129,7 @@ button:hover {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -141,9 +142,7 @@ import {
 
 import {
   getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -156,98 +155,169 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
-await setPersistence(auth, browserLocalPersistence);
+const auth = getAuth(app);
+
+const db = getFirestore(app);
 
 const mediaCollection = collection(db, "mediaItems");
 
 let isAdmin = false;
+
 let mediaItems = [];
 
-onAuthStateChanged(auth, (user) => {
-  if (user && user.email === "lucioegbert18@gmail.com") {
+/* AUTH */
+onAuthStateChanged(auth, async (user) => {
+
+  console.log("AUTH:", user);
+
+  if (
+    user &&
+    user.email &&
+    user.email.toLowerCase() === "lucioegbert18@gmail.com"
+  ) {
     isAdmin = true;
+
     document.getElementById("admin-panel").style.display = "block";
+
   } else {
+
     isAdmin = false;
+
     document.getElementById("admin-panel").style.display = "none";
   }
 
-  fetchMediaItems();
+  await fetchMediaItems();
 });
 
+/* FETCH */
 async function fetchMediaItems() {
+
   const snapshot = await getDocs(mediaCollection);
-  mediaItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  mediaItems = snapshot.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
+
   render();
 }
 
+/* ADD */
 async function addMediaItem(title, url, category) {
+
   if (!isAdmin) return;
 
-  await addDoc(mediaCollection, { title, url, category });
-  fetchMediaItems();
+  await addDoc(mediaCollection, {
+    title,
+    url,
+    category,
+    date: new Date().toISOString()
+  });
+
+  await fetchMediaItems();
 }
 
+/* UPDATE */
 async function updateMediaItem(id, updates) {
+
   if (!isAdmin) return;
 
   await updateDoc(doc(db, "mediaItems", id), updates);
-  fetchMediaItems();
+
+  await fetchMediaItems();
 }
 
+/* DELETE */
 async function deleteMediaItem(id) {
+
   if (!isAdmin) return;
 
   await deleteDoc(doc(db, "mediaItems", id));
-  fetchMediaItems();
+
+  await fetchMediaItems();
 }
 
+/* RENDER */
 function render() {
+
   const list = document.getElementById("reading-list");
+
   list.innerHTML = "";
 
   mediaItems.forEach(item => {
+
     const li = document.createElement("li");
 
     const a = document.createElement("a");
+
     a.href = item.url;
+
     a.textContent = item.title;
+
     a.target = "_blank";
+
     li.appendChild(a);
 
     if (item.category) {
+
       const span = document.createElement("span");
+
       span.textContent = ` [${item.category}]`;
+
       li.appendChild(span);
     }
 
     if (isAdmin) {
-      const edit = document.createElement("button");
-      edit.textContent = "Edit";
-      edit.onclick = () => {
-        const cat = prompt("New category:", item.category || "");
-        if (cat !== null) updateMediaItem(item.id, { category: cat });
+
+      const editBtn = document.createElement("button");
+
+      editBtn.textContent = "Edit";
+
+      editBtn.onclick = () => {
+
+        const newTitle = prompt("Title:", item.title);
+
+        const newURL = prompt("URL:", item.url);
+
+        const newCategory = prompt(
+          "Category:",
+          item.category || ""
+        );
+
+        if (newTitle === null || newURL === null) return;
+
+        updateMediaItem(item.id, {
+          title: newTitle.trim(),
+          url: newURL.trim(),
+          category: newCategory.trim()
+        });
       };
 
-      const del = document.createElement("button");
-      del.textContent = "Delete";
-      del.onclick = () => deleteMediaItem(item.id);
+      const deleteBtn = document.createElement("button");
 
-      li.appendChild(edit);
-      li.appendChild(del);
+      deleteBtn.textContent = "Delete";
+
+      deleteBtn.onclick = () => {
+        deleteMediaItem(item.id);
+      };
+
+      li.appendChild(editBtn);
+
+      li.appendChild(deleteBtn);
     }
 
     list.appendChild(li);
   });
 }
 
-document.getElementById("add-media-form").addEventListener("submit", (e) => {
+/* FORM */
+document.getElementById("add-media-form")
+.addEventListener("submit", async (e) => {
+
   e.preventDefault();
 
-  addMediaItem(
+  await addMediaItem(
     document.getElementById("media-title").value,
     document.getElementById("media-url").value,
     document.getElementById("media-category").value
@@ -256,6 +326,5 @@ document.getElementById("add-media-form").addEventListener("submit", (e) => {
   e.target.reset();
 });
 </script>
-
 </body>
 </html>
