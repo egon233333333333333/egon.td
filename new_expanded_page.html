@@ -132,7 +132,6 @@ button:hover {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-
 import {
   getFirestore,
   collection,
@@ -140,7 +139,9 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  doc
+  doc,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 import {
@@ -152,29 +153,24 @@ const firebaseConfig = {
   apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
-  storageBucket: "egontd-b9357.firebasestorage.app",
+  storageBucket: "egontd-b9357.appspot.com",
   messagingSenderId: "241512022087",
   appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const mediaCollection = collection(db, "mediaItems");
+const col = collection(db, "mediaItems");
 
 let isAdmin = false;
-let currentUser = null;
 
-/* AUTH (FIXED PROPERLY) */
+/* SAME PATTERN AS RAMBLINGS */
 onAuthStateChanged(auth, async (user) => {
 
   console.log("AUTH:", user);
 
-  currentUser = user;
-
-  /* IMPORTANT: match FIRESTORE RULES exactly */
   isAdmin =
     user &&
     user.email &&
@@ -183,80 +179,51 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("admin-panel").style.display =
     isAdmin ? "block" : "none";
 
-  await fetchMediaItems();
+  await loadMedia();
 });
 
-/* FETCH */
-async function fetchMediaItems() {
-
-  const snapshot = await getDocs(mediaCollection);
-
-  const mediaItems = snapshot.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
-
-  render(mediaItems);
-}
-
 /* ADD */
-async function addMediaItem(title, url, category) {
+window.addMediaItem = async function () {
 
   if (!isAdmin) return;
 
-  await addDoc(mediaCollection, {
+  const title = document.getElementById("media-title").value.trim();
+  const url = document.getElementById("media-url").value.trim();
+  const category = document.getElementById("media-category").value.trim();
+
+  await addDoc(col, {
     title,
     url,
     category,
     date: new Date().toISOString()
   });
 
-  await fetchMediaItems();
-}
+  await loadMedia();
+};
 
-/* UPDATE */
-async function updateMediaItem(id, updates) {
-
-  if (!isAdmin) return;
-
-  await updateDoc(doc(db, "mediaItems", id), updates);
-
-  await fetchMediaItems();
-}
-
-/* DELETE */
-async function deleteMediaItem(id) {
-
-  if (!isAdmin) return;
-
-  await deleteDoc(doc(db, "mediaItems", id));
-
-  await fetchMediaItems();
-}
-
-/* RENDER */
-function render(mediaItems) {
+/* LOAD */
+async function loadMedia() {
 
   const list = document.getElementById("reading-list");
 
   list.innerHTML = "";
 
-  mediaItems.forEach(item => {
+  const q = query(col, orderBy("date", "desc"));
+
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach((d) => {
+
+    const item = d.data();
+
+    const id = d.id;
 
     const li = document.createElement("li");
 
-    const a = document.createElement("a");
-    a.href = item.url;
-    a.textContent = item.title;
-    a.target = "_blank";
-
-    li.appendChild(a);
-
-    if (item.category) {
-      const span = document.createElement("span");
-      span.textContent = ` [${item.category}]`;
-      li.appendChild(span);
-    }
+    li.innerHTML = `
+      <a href="${item.url}" target="_blank">${item.title}</a>
+      ${item.category ? `[${item.category}]` : ""}
+    `;
 
     if (isAdmin) {
 
@@ -265,48 +232,38 @@ function render(mediaItems) {
 
       editBtn.onclick = async () => {
 
-        const newTitle = prompt("Title:", item.title);
-        const newURL = prompt("URL:", item.url);
-        const newCategory = prompt("Category:", item.category || "");
+        const t = prompt("Title:", item.title);
+        const u = prompt("URL:", item.url);
+        const c = prompt("Category:", item.category || "");
 
-        if (newTitle === null || newURL === null) return;
+        if (!t || !u) return;
 
-        await updateMediaItem(item.id, {
-          title: newTitle.trim(),
-          url: newURL.trim(),
-          category: newCategory.trim()
+        await updateDoc(doc(db, "mediaItems", id), {
+          title: t,
+          url: u,
+          category: c
         });
+
+        await loadMedia();
       };
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "Delete";
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
 
-      deleteBtn.onclick = async () => {
-        await deleteMediaItem(item.id);
+      delBtn.onclick = async () => {
+
+        await deleteDoc(doc(db, "mediaItems", id));
+
+        await loadMedia();
       };
 
       li.appendChild(editBtn);
-      li.appendChild(deleteBtn);
+      li.appendChild(delBtn);
     }
 
     list.appendChild(li);
   });
 }
-
-/* FORM */
-document.getElementById("add-media-form")
-.addEventListener("submit", async (e) => {
-
-  e.preventDefault();
-
-  await addMediaItem(
-    document.getElementById("media-title").value,
-    document.getElementById("media-url").value,
-    document.getElementById("media-category").value
-  );
-
-  e.target.reset();
-});
 
 </script>
 </body>
