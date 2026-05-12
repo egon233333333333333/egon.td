@@ -86,10 +86,16 @@ async function loadAlbum() {
 
   const data = snap.data();
 
-  let audio;
+ if (data.music) {
 
-  if (data.music) {
-  audio = new Audio(data.music);
+  // remove old audio if exists
+  const oldAudio = document.getElementById("bgMusic");
+  if (oldAudio) {
+    oldAudio.pause();
+    oldAudio.remove();
+  }
+
+  const audio = new Audio(data.music);
 
   audio.id = "bgMusic";
   audio.loop = true;
@@ -99,23 +105,6 @@ async function loadAlbum() {
 
   audio.play().catch(() => {
     console.log("Autoplay blocked");
-  });
-}
-
-  if (data.music) {
-  const audio = new Audio(data.music);
-
-  audio.autoplay = true;
-  audio.loop = true;
-  audio.volume = 0.2;
-
-  audio.id = "bgMusic";
-
-  document.querySelector(".content").prepend(audio);
-
-  // IMPORTANT: attempt play safely
-  audio.play().catch(() => {
-    console.log("Autoplay blocked — user interaction needed");
   });
 }
 
