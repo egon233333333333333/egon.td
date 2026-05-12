@@ -64,7 +64,7 @@ a { color: black; }
     <!-- MUSIC CONTROLS -->
     <div id="musicControls">
       <button onclick="rewindMusic()">⏮</button>
-      <button onclick="toggleMusic()">▶ / ⏸</button>
+      <button onclick="toggleMusic()">CLICK TO PLAY/PAUSE MUSIC</button>
       <button onclick="restartMusic()">🔁</button>
       <button onclick="skipMusic()">⏭</button>
     </div>
@@ -92,6 +92,8 @@ const db = getFirestore(app);
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
+let audio;
+
 async function loadAlbum() {
 
   const ref = doc(db, "albums", id);
@@ -111,26 +113,18 @@ async function loadAlbum() {
     oldAudio.remove();
   }
 
-  // CREATE MUSIC (MUTED AUTOPLAY)
+  // CREATE AUDIO
   if (data.music) {
-
-    const audio = document.createElement("audio");
+    audio = document.createElement("audio");
 
     audio.id = "bgMusic";
     audio.src = data.music;
     audio.loop = true;
     audio.volume = 0.2;
 
-    // autoplay workaround
-    audio.muted = true;
-
     document.querySelector(".content").prepend(audio);
 
-    audio.play().then(() => {
-      setTimeout(() => {
-        audio.muted = false;
-      }, 300);
-    }).catch(() => {
+    audio.play().catch(() => {
       console.log("Autoplay blocked");
     });
   }
@@ -147,12 +141,12 @@ async function loadAlbum() {
 
 loadAlbum();
 
-/* AUDIO HELPERS */
+// GET AUDIO
 function getAudio() {
   return document.getElementById("bgMusic");
 }
 
-/* CONTROLS */
+// CONTROLS
 window.toggleMusic = function () {
   const audio = getAudio();
   if (!audio) return;
