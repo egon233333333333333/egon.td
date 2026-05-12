@@ -37,7 +37,6 @@ body {
 
 a { color: black; text-decoration: none; }
 
-/* album blocks */
 .album {
   border-bottom: 1px solid #ccc;
   padding: 10px 0;
@@ -62,6 +61,10 @@ textarea, button {
   margin-top: 5px;
 }
 
+button {
+  cursor: pointer;
+}
+
 button:hover {
   background: brown;
   color: white;
@@ -83,7 +86,7 @@ button:hover {
     <h1>gallery</h1>
     <p><a href="index.html">back to home</a></p>
 
-    <!-- ADMIN -->
+    <!-- ADMIN PANEL -->
     <div id="admin-panel" style="display:none;">
       <textarea id="albumTitle" placeholder="Album title"></textarea><br>
       <textarea id="albumCover" placeholder="Cover image URL"></textarea><br>
@@ -100,11 +103,22 @@ button:hover {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, getDocs,
-  deleteDoc, doc, query, orderBy
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
@@ -122,67 +136,110 @@ const col = collection(db, "albums");
 
 let isAdmin = false;
 
-/* AUTH */
-onAuthStateChanged(auth, (user) => {
-  if (user && user.email === "lucioegbert18@gmail.com") {
+/* AUTH CHECK */
+onAuthStateChanged(auth, async (user) => {
+
+  console.log("AUTH USER:", user);
+
+  if (user && user.email && user.email.toLowerCase() === "lucioegbert18@gmail.com") {
     isAdmin = true;
     document.getElementById("admin-panel").style.display = "block";
+    console.log("ADMIN ENABLED");
+  } else {
+    isAdmin = false;
+    console.log("NOT ADMIN");
   }
-  loadAlbums();
+
+  await loadAlbums();
 });
 
 /* ADD ALBUM */
 window.addAlbum = async function () {
-  if (!isAdmin) return;
 
-  const title = document.getElementById("albumTitle").value;
-  const cover = document.getElementById("albumCover").value;
-  const photos = document.getElementById("albumPhotos").value.split(",");
+  console.log("Add album clicked");
+  console.log("isAdmin =", isAdmin);
 
-  await addDoc(col, {
-    title,
-    cover,
-    photos,
-    date: new Date().toISOString()
-  });
+  if (!isAdmin) {
+    alert("You are not admin");
+    return;
+  }
 
-  loadAlbums();
+  try {
+    const title = document.getElementById("albumTitle").value.trim();
+    const cover = document.getElementById("albumCover").value.trim();
+    const photos = document.getElementById("albumPhotos").value
+      .split(",")
+      .map(p => p.trim())
+      .filter(p => p !== "");
+
+    if (!title || !cover) {
+      alert("Title and cover required");
+      return;
+    }
+
+    await addDoc(col, {
+      title,
+      cover,
+      photos,
+      date: Date.now()
+    });
+
+    console.log("Album uploaded");
+
+    document.getElementById("albumTitle").value = "";
+    document.getElementById("albumCover").value = "";
+    document.getElementById("albumPhotos").value = "";
+
+    loadAlbums();
+
+  } catch (err) {
+    console.error("ERROR ADDING ALBUM:", err);
+    alert(err.message);
+  }
 };
 
-/* LOAD */
+/* LOAD ALBUMS */
 async function loadAlbums() {
+
   const container = document.getElementById("albums");
   container.innerHTML = "";
 
-  const q = query(col, orderBy("date", "desc"));
-  const snap = await getDocs(q);
+  try {
+    const q = query(col, orderBy("date", "desc"));
+    const snap = await getDocs(q);
 
-  snap.forEach(d => {
-    const a = d.data();
+    snap.forEach(d => {
+      const a = d.data();
 
-    const div = document.createElement("div");
-    div.className = "album";
+      const div = document.createElement("div");
+      div.className = "album";
 
-    div.innerHTML = `
-      <a href="album.html?id=${d.id}">
-        <h3>${a.title}</h3>
-        <img src="${a.cover}">
-      </a>
-      <div class="date">${new Date(a.date).toLocaleString()}</div>
-    `;
+      div.innerHTML = `
+        <a href="album.html?id=${d.id}">
+          <h3>${a.title}</h3>
+          <img src="${a.cover}">
+        </a>
+        <div class="date">${new Date(a.date).toLocaleString()}</div>
+      `;
 
-    if (isAdmin) {
-      const del = document.createElement("button");
-      del.textContent = "Delete";
-      del.onclick = async () => {
-        await deleteDoc(doc(db, "albums", d.id));
-        loadAlbums();
-      };
-      div.appendChild(del);
-    }
+      if (isAdmin) {
+        const del = document.createElement("button");
+        del.textContent = "Delete";
 
-    container.appendChild(div);
-  });
+        del.onclick = async () => {
+          await deleteDoc(doc(db, "albums", d.id));
+          loadAlbums();
+        };
+
+        div.appendChild(del);
+      }
+
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("LOAD ERROR:", err);
+  }
 }
 </script>
 
