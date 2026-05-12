@@ -2,76 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ole-mole reading list</title>
+<title>album</title>
 
 <style>
-#header {
-      background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
-	  background-size: 100% 100%; /* Stretches to fill width and height */
- 	  background-repeat: no-repeat;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-.title a {
-      color: #FFF073;
-      text-decoration: none; /* Remove underline */
-    }
-
-.subtitle a {
-      color: grey;
-	  font-family: Courier New;
-      text-decoration: none; /* Remove underline */
+body {
+  font-family: Times New Roman, sans-serif;
+  background-color: #877360;
+  margin: 0;
+  color: grey;
 }
-  body {
-    font-family: Times New Roman, sans-serif;
-    background-color: #EBE4E4;
-    margin: 0;
-    padding: 0;
-    color: #566175;
-  }
 
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
+.container {
+  max-width: 800px;
+  margin: auto;
+}
 
-  #reading-list {
-    list-style: none;
-    padding: 0;
-  }
+#header {
+  background: #222;
+  padding: 15px;
+  text-align: center;
+}
 
-  .book {
-    margin: 10px 0;
-    padding: 10px;
-  }
+.content {
+  background: #EBE4E4;
+  padding: 20px;
+  border: 1px solid grey;
+}
 
-  .book a {
-    color: blue;
-    text-decoration: none;
-  }
+img {
+  width: 100%;
+  margin-bottom: 10px;
+}
 
-  .book a:hover {
-    color: #FFF073;
-  }
+a { color: black; }
 
-  .date {
-    font-size: 0.8em;
-    color: gray;
-  }
-
-  button {
-    margin-top: 5px;
-    padding: 5px 10px;
-    background: black;
-    color: white;
-    border: 1px solid white;
-    cursor: pointer;
-  }
-
-  button:hover {
-    opacity: 0.8;
-  }
+/* music stays invisible */
+#music iframe {
+  display: none;
+}
 </style>
 </head>
 
@@ -79,170 +47,82 @@
 
 <div class="container">
 
- <div id="header">
-      <h1 class="title"><a href="index.html">egon.td</a></h1>
-	  <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
-	  </p>
+  <div id="header">
+    <a href="gallery.html">← back to gallery</a>
   </div>
 
-  <div style="text-align:center;">
-    <img src="https://i.pinimg.com/736x/54/42/c3/5442c369575d6878995eebe6b4a82368.jpg" width="300">
+  <div class="content">
+
+    <h2 id="title"></h2>
+
+    <!-- MUSIC CONTAINER -->
+    <div id="music"></div>
+
+    <!-- PHOTOS -->
+    <div id="photos"></div>
+
   </div>
-
-  <h1>-- ole mole list --</h1>
-
-  <!-- ADMIN PANEL ONLY -->
-  <div id="admin-panel" style="display:none;">
-    <input type="text" id="bookTitle" placeholder="Book Title"><br>
-    <input type="text" id="bookAuthor" placeholder="Author"><br>
-    <input type="url" id="bookURL" placeholder="Book URL"><br>
-    <button onclick="addBook()">Add Book</button>
-    <button onclick="logout()">Logout</button>
-    <hr>
-  </div>
-
-  <!-- BOOK LIST -->
-  <div id="reading-list"></div>
 
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import {
   getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
   doc,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  getDoc
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
-  storageBucket: "egontd-b9357.appspot.com",
-  messagingSenderId: "241512022087",
-  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
-let isAdmin = false;
-const col = collection(db, "books");
 
-/* ---------- AUTH ---------- */
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
 
+async function loadAlbum() {
 
-/* ---------- ADMIN UI ---------- */
-function unlockAdmin() {
-  document.getElementById("admin-panel").style.display = "block";
-}
+  const ref = doc(db, "albums", id);
+  const snap = await getDoc(ref);
 
-/* ---------- ADD BOOK ---------- */
-window.addBook = async function () {
-  const title = document.getElementById("bookTitle").value.trim();
-  const author = document.getElementById("bookAuthor").value.trim();
-  const url = document.getElementById("bookURL").value.trim();
+  if (!snap.exists()) return;
 
-  if (title && author && url) {
-    await addDoc(col, {
-      title,
-      author,
-      url,
-      date: new Date().toLocaleString()
-    });
+  const data = snap.data();
 
-    document.getElementById("bookTitle").value = "";
-    document.getElementById("bookAuthor").value = "";
-    document.getElementById("bookURL").value = "";
+  // TITLE
+  document.getElementById("title").innerText = data.title;
 
-    loadBooks();
-  }
-};
+  // MUSIC (YouTube autoplay)
+  if (data.music) {
+    const music = document.getElementById("music");
 
-/* ---------- LOAD BOOKS ---------- */
-async function loadBooks() {
-  const container = document.getElementById("reading-list");
-  container.innerHTML = "";
-
-  const q = query(col, orderBy("date", "desc"));
-  const snapshot = await getDocs(q);
-
-  snapshot.forEach((d) => {
-    const b = d.data();
-    const id = d.id;
-
-    const div = document.createElement("div");
-    div.className = "book";
-
-    div.innerHTML = `
-      <div>
-        <a href="${b.url}" target="_blank"><strong>${b.title}</strong></a>
-        by ${b.author}
-      </div>
-      <div class="date">${b.date}</div>
-
-      ${isAdmin() ? `
-        <button onclick="editBook('${id}', \`${b.title}\`, \`${b.author}\`, \`${b.url}\`)">Edit</button>
-        <button onclick="deleteBook('${id}')">Delete</button>
-      ` : ""}
+    music.innerHTML = `
+      <iframe
+        width="0"
+        height="0"
+        src="https://www.youtube.com/embed/${data.music}?autoplay=1&loop=1&playlist=${data.music}&mute=1"
+        frameborder="0"
+        allow="autoplay">
+      </iframe>
     `;
+  }
 
-    container.appendChild(div);
+  // PHOTOS
+  const container = document.getElementById("photos");
+
+  data.photos.forEach(url => {
+    const img = document.createElement("img");
+    img.src = url.trim();
+    container.appendChild(img);
   });
 }
 
-/* ---------- EDIT ---------- */
-window.editBook = async function (id, title, author, url) {
-  const newTitle = prompt("Title:", title);
-  const newAuthor = prompt("Author:", author);
-  const newURL = prompt("URL:", url);
-
-  if (newTitle && newAuthor && newURL) {
-    await updateDoc(doc(db, "books", id), {
-      title: newTitle,
-      author: newAuthor,
-      url: newURL
-    });
-
-    loadBooks();
-  }
-};
-
-/* ---------- DELETE ---------- */
-window.deleteBook = async function (id) {
-  if (confirm("Delete this book?")) {
-    await deleteDoc(doc(db, "books", id));
-    loadBooks();
-  }
-};
-
-/* ---------- LOGOUT ---------- */
-window.logout = function () {
-  localStorage.removeItem("isAdmin");
-  location.reload();
-};
-
-/* ---------- INIT ---------- */
-window.onload = function () {
-  if (isAdmin()) {
-    unlockAdmin();
-  }
-
-  loadBooks();
-};
+loadAlbum();
 </script>
 
 </body>
