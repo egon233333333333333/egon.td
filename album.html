@@ -48,9 +48,7 @@ a { color: black; }
   <div class="content">
     <h2 id="title"></h2>
 
-<audio id="bgMusic" autoplay loop>
-  <source src="https://ia600105.us.archive.org/25/items/eraserheads-alapaap-lyric-video/Eraserheads%20-%20Alapaap%20%28Lyric%20Video%29.mp3" type="audio/mpeg">
-</audio>
+
     <div id="photos"></div>
   </div>
 
@@ -81,6 +79,18 @@ async function loadAlbum() {
   if (!snap.exists()) return;
 
   const data = snap.data();
+
+  if (data.music) {
+  const audio = document.createElement("audio");
+
+  audio.id = "bgMusic";
+  audio.autoplay = true;
+  audio.loop = true;
+  audio.src = data.music;
+  audio.volume = 0.2;
+
+  document.querySelector(".content").prepend(audio);
+}
 
   document.getElementById("title").innerText = data.title;
 
