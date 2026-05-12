@@ -48,7 +48,7 @@ a { color: black; }
   <div class="content">
     <h2 id="title"></h2>
 
-<audio autoplay loop>
+<audio id="bgMusic" autoplay loop>
   <source src="https://ia600105.us.archive.org/25/items/eraserheads-alapaap-lyric-video/Eraserheads%20-%20Alapaap%20%28Lyric%20Video%29.mp3" type="audio/mpeg">
 </audio>
     <div id="photos"></div>
@@ -94,7 +94,9 @@ async function loadAlbum() {
 }
 
 loadAlbum();
-
+window.addEventListener("load", () => {
+  document.getElementById("bgMusic").volume = 0.2;
+});
   
 document.getElementById("bgMusic").volume = 0.2;
 
