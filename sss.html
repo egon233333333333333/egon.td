@@ -323,7 +323,210 @@
   </div>
 	
 </div>
+<script type="module">
 
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  doc
+}
+from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+/* FIREBASE */
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+
+  authDomain: "egontd-b9357.firebaseapp.com",
+
+  projectId: "egontd-b9357",
+
+  storageBucket: "egontd-b9357.firebasestorage.app",
+
+  messagingSenderId: "241512022087",
+
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const auth = getAuth(app);
+
+const col = collection(db, "videos");
+
+let isAdmin = false;
+
+/* AUTH */
+
+onAuthStateChanged(auth, async (user) => {
+
+  if (
+    user &&
+    user.email &&
+    user.email.toLowerCase() === "lucioegbert18@gmail.com"
+  ) {
+
+    isAdmin = true;
+
+    document.getElementById("video-admin").style.display = "block";
+
+  } else {
+
+    isAdmin = false;
+
+    document.getElementById("video-admin").style.display = "none";
+  }
+
+  await loadVideos();
+});
+
+/* GET YOUTUBE ID */
+
+function getYoutubeId(url) {
+
+  const regExp =
+    /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+
+  const match = url.match(regExp);
+
+  return (match && match[2].length === 11)
+    ? match[2]
+    : null;
+}
+
+/* ADD VIDEO */
+
+window.addVideo = async function () {
+
+  if (!isAdmin) return;
+
+  const title =
+    document.getElementById("video-title").value.trim();
+
+  const url =
+    document.getElementById("video-url").value.trim();
+
+  if (!title || !url) return;
+
+  await addDoc(col, {
+    title,
+    url
+  });
+
+  document.getElementById("video-title").value = "";
+
+  document.getElementById("video-url").value = "";
+
+  await loadVideos();
+};
+
+/* LOAD VIDEOS */
+
+async function loadVideos() {
+
+  const container =
+    document.getElementById("video-list");
+
+  const snapshot = await getDocs(col);
+
+  snapshot.forEach((d) => {
+
+    const video = d.data();
+
+    const id = d.id;
+
+    const youtubeId =
+      getYoutubeId(video.url);
+
+    if (!youtubeId) return;
+
+    const div =
+      document.createElement("div");
+
+    div.className = "featured";
+
+    div.innerHTML = `
+
+      <p class="ee">${video.title}</p>
+
+      <div class="video-container">
+
+        <iframe
+          class="responsive-iframe"
+          width="600"
+          height="345"
+          src="https://www.youtube.com/embed/${youtubeId}">
+        </iframe>
+
+      </div>
+
+    `;
+
+    if (isAdmin) {
+
+      const editBtn =
+        document.createElement("button");
+
+      editBtn.textContent = "Edit";
+
+      editBtn.onclick = async () => {
+
+        const newTitle =
+          prompt("Title:", video.title);
+
+        const newURL =
+          prompt("URL:", video.url);
+
+        if (!newTitle || !newURL) return;
+
+        await updateDoc(doc(db, "videos", id), {
+
+          title: newTitle.trim(),
+          url: newURL.trim()
+
+        });
+
+        location.reload();
+      };
+
+      const deleteBtn =
+        document.createElement("button");
+
+      deleteBtn.textContent = "Delete";
+
+      deleteBtn.onclick = async () => {
+
+        await deleteDoc(doc(db, "videos", id));
+
+        location.reload();
+      };
+
+      div.appendChild(editBtn);
+
+      div.appendChild(deleteBtn);
+    }
+
+    container.appendChild(div);
+  });
+}
+
+</script>
     
 </body>
 </html>
