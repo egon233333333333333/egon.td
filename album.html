@@ -81,15 +81,20 @@ async function loadAlbum() {
   const data = snap.data();
 
   if (data.music) {
-  const audio = document.createElement("audio");
+  const audio = new Audio(data.music);
 
-  audio.id = "bgMusic";
   audio.autoplay = true;
   audio.loop = true;
-  audio.src = data.music;
   audio.volume = 0.2;
 
+  audio.id = "bgMusic";
+
   document.querySelector(".content").prepend(audio);
+
+  // IMPORTANT: attempt play safely
+  audio.play().catch(() => {
+    console.log("Autoplay blocked — user interaction needed");
+  });
 }
 
   document.getElementById("title").innerText = data.title;
@@ -104,11 +109,7 @@ async function loadAlbum() {
 }
 
 loadAlbum();
-window.addEventListener("load", () => {
-  document.getElementById("bgMusic").volume = 0.2;
-});
-  
-document.getElementById("bgMusic").volume = 0.2;
+
 
 </script>
 
