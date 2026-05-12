@@ -13,14 +13,10 @@
       background-color: #877360;
       margin: 0;
       padding: 0;
-      align-content: left;
       color: grey;
     }
 
-    img {
-      width: 100%;
-      height: auto;
-    }
+    img { width: 100%; height: auto; }
 
     #header {
       background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
@@ -52,8 +48,6 @@
       background-color: #EBE4E4;
       padding: 20px;
       margin-top: 20px;
-      text-align: left;
-      border-color: grey;
     }
 
     #reading-list, #socials {
@@ -66,14 +60,9 @@
       text-decoration: none;
     }
 
-    #reading-list a {
-      color: black;
-      text-decoration: none;
-    }
-
     .ee {
       color: grey;
-      font-family: 'Trebuchet MS', sans-serif;
+      font-family: Trebuchet MS;
       font-size: 30px;
     }
 
@@ -97,21 +86,17 @@
     .contact-form textarea {
       width: 100%;
       padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #333;
+      margin-bottom: 10px;
     }
 
-    .contact-form button {
-      width: 100%;
-      padding: 10px;
-      background: transparent;
-      border: 1px solid #888;
+    button {
+      padding: 8px;
       cursor: pointer;
     }
 
-    .contact-form button:hover {
-      background: brown;
-      color: white;
+    #video-admin {
+      display: none;
+      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -127,19 +112,16 @@
 
   <div class="content-container">
 
-    <!-- YOUR EXISTING CONTENT (UNCHANGED) -->
-    <p>CONTENT HERE (UNCHANGED)</p>
+    <!-- NAV -->
+    <p><b>EGON.TD</b> personal site...</p>
 
-    <h4>【❖】fav digital media list</h4>
+    <!-- EXISTING VIDEOS + FIREBASE -->
+    <h4>VIDEOS</h4>
 
-    <ul id="reading-list">
-      <li><a href="#">Example link</a></li>
-    </ul>
-
-    <!-- VIDEO ADMIN PANEL -->
-    <div id="video-admin" style="display:none; margin-bottom:20px;">
-      <input type="text" id="video-title" placeholder="Video title"><br><br>
-      <input type="text" id="video-url" placeholder="YouTube URL"><br><br>
+    <!-- ADMIN PANEL -->
+    <div id="video-admin">
+      <input id="video-title" placeholder="Video title"><br><br>
+      <input id="video-url" placeholder="YouTube URL"><br><br>
       <button onclick="addVideo()">Add Video</button>
       <hr>
     </div>
@@ -147,8 +129,7 @@
     <!-- VIDEO LIST -->
     <div id="video-list">
 
-      <!-- HARD CODED VIDEOS (STAYS ALWAYS) -->
-
+      <!-- HARD CODED (STAYS ALWAYS) -->
       <div class="featured">
         <p class="ee">the better kpop</p>
         <iframe class="responsive-iframe" height="345"
@@ -167,26 +148,17 @@
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  updateDoc,
-  doc
+  getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-
 import {
-  getAuth,
-  onAuthStateChanged
+  getAuth, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JjchZL7qcwbBk1BMmYtAPqNrcQcJevA",
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
   authDomain: "egontd-b9357.firebaseapp.com",
   projectId: "egontd-b9357",
   storageBucket: "egontd-b9357.firebasestorage.app",
@@ -201,33 +173,30 @@ const col = collection(db, "videos");
 
 let isAdmin = false;
 
-/* AUTH */
+/* ADMIN CHECK */
 onAuthStateChanged(auth, (user) => {
-
-  isAdmin =
-    user &&
-    user.email &&
-    user.email.toLowerCase() === "lucioegbert18@gmail.com";
-
-  document.getElementById("video-admin").style.display =
-    isAdmin ? "block" : "none";
-
+  if (user && user.email === "lucioegbert18@gmail.com") {
+    isAdmin = true;
+    document.getElementById("video-admin").style.display = "block";
+  } else {
+    isAdmin = false;
+    document.getElementById("video-admin").style.display = "none";
+  }
   loadVideos();
 });
 
-/* YOUTUBE ID */
-function getYoutubeId(url) {
+/* YT ID */
+function getId(url) {
   const match = url.match(/(?:youtu\.be\/|v=|embed\/)([^&?/]+)/);
   return match ? match[1] : null;
 }
 
 /* ADD VIDEO */
 window.addVideo = async function () {
-
   if (!isAdmin) return;
 
-  const title = document.getElementById("video-title").value.trim();
-  const url = document.getElementById("video-url").value.trim();
+  const title = document.getElementById("video-title").value;
+  const url = document.getElementById("video-url").value;
 
   if (!title || !url) return;
 
@@ -241,73 +210,40 @@ window.addVideo = async function () {
 
 /* LOAD VIDEOS */
 async function loadVideos() {
-
   const container = document.getElementById("video-list");
-
-  const existing = Array.from(container.querySelectorAll(".featured"))
-    .filter(v => !v.dataset.firebase);
-
-  container.innerHTML = "";
-  existing.forEach(v => container.appendChild(v));
 
   const snapshot = await getDocs(col);
 
   snapshot.forEach((d) => {
-
-    const video = d.data();
-    const id = d.id;
-
-    const youtubeId = getYoutubeId(video.url);
-    if (!youtubeId) return;
+    const v = d.data();
+    const id = getId(v.url);
+    if (!id) return;
 
     const div = document.createElement("div");
     div.className = "featured";
-    div.dataset.firebase = "true";
 
     div.innerHTML = `
-      <p class="ee">${video.title}</p>
+      <p class="ee">${v.title}</p>
       <iframe class="responsive-iframe" height="345"
-        src="https://www.youtube.com/embed/${youtubeId}">
+        src="https://www.youtube.com/embed/${id}">
       </iframe>
     `;
 
     if (isAdmin) {
-
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "Edit";
-
-      editBtn.onclick = async () => {
-        const t = prompt("Title:", video.title);
-        const u = prompt("URL:", video.url);
-
-        if (!t || !u) return;
-
-        await updateDoc(doc(db, "videos", id), {
-          title: t,
-          url: u
-        });
-
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.onclick = async () => {
+        await deleteDoc(doc(db, "videos", d.id));
         loadVideos();
       };
 
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "Delete";
-
-      delBtn.onclick = async () => {
-        await deleteDoc(doc(db, "videos", id));
-        loadVideos();
-      };
-
-      div.appendChild(editBtn);
-      div.appendChild(delBtn);
+      div.appendChild(del);
     }
 
     container.appendChild(div);
   });
 }
-
 </script>
 
 </body>
 </html>
-
