@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>gallery</title>
+
+<style>
+body {
+  font-family: Times New Roman, sans-serif;
+  background-color: #877360;
+  margin: 0;
+  padding: 0;
+  color: grey;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#header {
+  background-image: url("https://i.pinimg.com/originals/c2/64/b7/c264b7874818f50253fbc95b348bb466.gif");
+  background-size: 100% 100%;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title a { color: #FFF073; text-decoration: none; }
+.subtitle a { color: grey; font-family: Courier New; text-decoration: none; }
+
+.content-container {
+  border: 1px solid grey;
+  background-color: #EBE4E4;
+  padding: 20px;
+}
+
+a { color: black; text-decoration: none; }
+
+/* album blocks */
+.album {
+  border-bottom: 1px solid #ccc;
+  padding: 10px 0;
+}
+
+.album img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  margin-top: 10px;
+}
+
+.date {
+  font-size: 0.8em;
+  color: gray;
+}
+
+textarea, button {
+  font-family: Times New Roman, sans-serif;
+  border: 1px solid #333;
+  padding: 6px;
+  margin-top: 5px;
+}
+
+button:hover {
+  background: brown;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div id="header">
+    <h1 class="title"><a href="index.html">egon.td</a></h1>
+    <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
+  </div>
+
+  <div class="content-container">
+
+    <h1>gallery</h1>
+    <p><a href="index.html">back to home</a></p>
+
+    <!-- ADMIN -->
+    <div id="admin-panel" style="display:none;">
+      <textarea id="albumTitle" placeholder="Album title"></textarea><br>
+      <textarea id="albumCover" placeholder="Cover image URL"></textarea><br>
+      <textarea id="albumPhotos" placeholder="Photo URLs (comma separated)"></textarea><br>
+      <button onclick="addAlbum()">Add Album</button>
+      <hr>
+    </div>
+
+    <div id="albums"></div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs,
+  deleteDoc, doc, query, orderBy
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.appspot.com",
+  messagingSenderId: "241512022087",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const col = collection(db, "albums");
+
+let isAdmin = false;
+
+/* AUTH */
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email === "lucioegbert18@gmail.com") {
+    isAdmin = true;
+    document.getElementById("admin-panel").style.display = "block";
+  }
+  loadAlbums();
+});
+
+/* ADD ALBUM */
+window.addAlbum = async function () {
+  if (!isAdmin) return;
+
+  const title = document.getElementById("albumTitle").value;
+  const cover = document.getElementById("albumCover").value;
+  const photos = document.getElementById("albumPhotos").value.split(",");
+
+  await addDoc(col, {
+    title,
+    cover,
+    photos,
+    date: new Date().toISOString()
+  });
+
+  loadAlbums();
+};
+
+/* LOAD */
+async function loadAlbums() {
+  const container = document.getElementById("albums");
+  container.innerHTML = "";
+
+  const q = query(col, orderBy("date", "desc"));
+  const snap = await getDocs(q);
+
+  snap.forEach(d => {
+    const a = d.data();
+
+    const div = document.createElement("div");
+    div.className = "album";
+
+    div.innerHTML = `
+      <a href="album.html?id=${d.id}">
+        <h3>${a.title}</h3>
+        <img src="${a.cover}">
+      </a>
+      <div class="date">${new Date(a.date).toLocaleString()}</div>
+    `;
+
+    if (isAdmin) {
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.onclick = async () => {
+        await deleteDoc(doc(db, "albums", d.id));
+        loadAlbums();
+      };
+      div.appendChild(del);
+    }
+
+    container.appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>
