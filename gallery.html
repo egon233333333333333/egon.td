@@ -91,6 +91,7 @@ button:hover {
       <textarea id="albumTitle" placeholder="Album title"></textarea><br>
       <textarea id="albumCover" placeholder="Cover image URL"></textarea><br>
       <textarea id="albumPhotos" placeholder="Photo URLs (comma separated)"></textarea><br>
+      <textarea id="albumMusic" placeholder="Music URL (.mp3)"></textarea><br>
       <button onclick="addAlbum()">Add Album</button>
       <hr>
     </div>
@@ -172,6 +173,8 @@ window.addAlbum = async function () {
       .map(p => p.trim())
       .filter(p => p !== "");
 
+    const music = document.getElementById("albumMusic").value.trim();
+
     if (!title || !cover) {
       alert("Title and cover required");
       return;
@@ -181,6 +184,7 @@ window.addAlbum = async function () {
       title,
       cover,
       photos,
+      music,
       date: Date.now()
     });
 
@@ -189,6 +193,7 @@ window.addAlbum = async function () {
     document.getElementById("albumTitle").value = "";
     document.getElementById("albumCover").value = "";
     document.getElementById("albumPhotos").value = "";
+    document.getElementById("albumMusic").value = "";
 
     loadAlbums();
 
