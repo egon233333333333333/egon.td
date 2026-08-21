@@ -199,7 +199,6 @@ window.addMedia = async function () {
 
   loadMedia();
 };
-
 /* LOAD */
 async function loadMedia() {
 
@@ -208,7 +207,12 @@ async function loadMedia() {
 
   const snapshot = await getDocs(col);
 
-  snapshot.forEach((d) => {
+  // Sort by date added — newest first
+  const documents = snapshot.docs.sort((a, b) => {
+    return new Date(b.data().date) - new Date(a.data().date);
+  });
+
+  documents.forEach((d) => {
 
     const item = d.data();
     const id = d.id;
