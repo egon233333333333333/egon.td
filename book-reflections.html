@@ -51,10 +51,53 @@ body {
   padding: 0;
 }
 
+/* =========================
+   ADDED NAVIGATION
+   ========================= */
+
+.page-layout {
+  display: flex;
+  align-items: flex-start;
+}
+
+#book-navigation {
+  width: 150px;
+  flex-shrink: 0;
+  padding-right: 15px;
+  margin-right: 20px;
+  border-right: 1px solid grey;
+  position: sticky;
+  top: 20px;
+}
+
+#book-navigation h3 {
+  margin-top: 0;
+  color: black;
+}
+
+.nav-book {
+  margin: 10px 0;
+}
+
+.nav-book a {
+  color: black;
+  text-decoration: none;
+}
+
+.nav-book a:hover {
+  color: blue;
+}
+
+.review-content {
+  flex: 1;
+  min-width: 0;
+}
+
 .review {
   margin: 20px 0;
   padding: 15px;
   border-bottom: 1px solid grey;
+  scroll-margin-top: 20px;
 }
 
 .review-title {
@@ -133,6 +176,15 @@ textarea {
 #admin-panel {
   margin-bottom: 10px;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* =========================
+   END NAVIGATION
+   ========================= */
+
 </style>
 </head>
 
@@ -200,7 +252,34 @@ textarea {
 
     </div>
 
-    <div id="review-list"></div>
+
+    <!-- =========================
+         ADDED NAVIGATION WRAPPER
+         ========================= -->
+
+    <div class="page-layout">
+
+      <!-- LEFT SIDE NAVIGATION -->
+
+      <nav id="book-navigation">
+
+        <h3>-- books --</h3>
+
+        <div id="navigation-list"></div>
+
+      </nav>
+
+
+      <!-- EXISTING REVIEW LIST -->
+
+      <div class="review-content">
+
+        <div id="review-list"></div>
+
+      </div>
+
+    </div>
+
 
   </div>
 
@@ -332,7 +411,12 @@ async function loadReviews() {
   const container =
     document.getElementById("review-list");
 
+  const navigation =
+    document.getElementById("navigation-list");
+
   container.innerHTML = "";
+
+  navigation.innerHTML = "";
 
 
   const q =
@@ -349,10 +433,36 @@ async function loadReviews() {
     const id = d.id;
 
 
+    /* =========================
+       ADDED NAVIGATION ITEM
+       ========================= */
+
+    const navItem =
+      document.createElement("div");
+
+    navItem.className = "nav-book";
+
+    navItem.innerHTML = `
+
+      <a href="#review-${id}">
+        ${review.title}
+      </a>
+
+    `;
+
+    navigation.appendChild(navItem);
+
+
+    /* EXISTING REVIEW */
+
     const div =
       document.createElement("div");
 
     div.className = "review";
+
+    /* ADDED ID SO NAVIGATION CAN JUMP HERE */
+
+    div.id = `review-${id}`;
 
 
     div.innerHTML = `
