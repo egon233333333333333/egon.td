@@ -9,6 +9,20 @@
     body {
       background-color: #877360;
     }
+
+    .content-container {
+      max-width: 600px;
+    }
+
+    .video-container {
+      width: 100%;
+    }
+
+    .responsive-iframe {
+      width: 100%;
+      aspect-ratio: 600 / 345;
+      border: 1px solid grey;
+    }
   </style>
 
 </head>
@@ -19,18 +33,18 @@
 
     <h3>Sino si Rizal Para Sayo?</h3>
 
-    <iframe
-      width="100%"
-      height="500"
-      src="https://www.youtube.com/embed/G0vjRwlnCjo"
-      title="Sino si Rizal para sayo?"
-      frameborder="0"
-      allowfullscreen>
-    </iframe>
+    <div class="video-container">
+      <iframe
+        class="responsive-iframe"
+        src="https://www.youtube.com/embed/G0vjRwlnCjo"
+        title="Sino si Rizal para sayo?"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen>
+      </iframe>
+    </div>
 
   </div>
 
 </body>
 </html>
-
-
