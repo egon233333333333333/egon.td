@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ole-mole book reviews & reflections</title>
+
+<style>
+body {
+  font-family: Times New Roman, sans-serif;
+  background-color: #877360;
+  margin: 0;
+  padding: 0;
+  color: grey;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#header {
+  background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title a {
+  color: #FFF073;
+  text-decoration: none;
+}
+
+.subtitle a {
+  color: grey;
+  font-family: Courier New;
+  text-decoration: none;
+}
+
+.content-container {
+  border: 1px solid grey;
+  background-color: #EBE4E4;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+#review-list {
+  list-style: none;
+  padding: 0;
+}
+
+.review {
+  margin: 20px 0;
+  padding: 15px;
+  border-bottom: 1px solid grey;
+}
+
+.review-title {
+  font-size: 1.2em;
+}
+
+.review-title a {
+  color: black;
+  text-decoration: none;
+}
+
+.review-title a:hover {
+  color: blue;
+}
+
+.review-type {
+  font-size: 0.8em;
+  color: grey;
+  font-family: Courier New;
+  margin-top: 5px;
+}
+
+.review-text {
+  margin-top: 10px;
+  line-height: 1.5;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+.date {
+  font-size: 0.8em;
+  color: gray;
+  margin-top: 10px;
+}
+
+button {
+  margin-top: 5px;
+  margin-right: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  color: black;
+  border: 1px solid #333;
+  cursor: pointer;
+}
+
+button:hover {
+  background: brown;
+  color: white;
+}
+
+input,
+select,
+textarea {
+  margin-top: 5px;
+  padding: 6px;
+  box-sizing: border-box;
+  font-family: Times New Roman, sans-serif;
+}
+
+input {
+  width: 100%;
+  max-width: 500px;
+}
+
+select {
+  width: 150px;
+}
+
+textarea {
+  width: 100%;
+  max-width: 700px;
+  min-height: 150px;
+  resize: vertical;
+}
+
+#admin-panel {
+  margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div id="header">
+    <h1 class="title">
+      <a href="index.html">egon.td</a>
+    </h1>
+
+    <h3 class="subtitle">
+      <a href="index.html">for the algorithm averse.</a>
+    </h3>
+  </div>
+
+  <div class="content-container">
+
+    <div style="text-align:center;">
+      <img
+        src="https://i.pinimg.com/736x/54/42/c3/5442c369575d6878995eebe6b4a82368.jpg"
+        width="300">
+    </div>
+
+    <h1>-- book reviews & reflections --</h1>
+
+    <p>
+      Reviews, thoughts, and reflections on the books I've read.
+    </p>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" style="display:none;">
+
+      <input
+        type="text"
+        id="bookTitle"
+        placeholder="Book Title">
+
+      <br>
+
+      <input
+        type="text"
+        id="bookAuthor"
+        placeholder="Author">
+
+      <br>
+
+      <select id="bookType">
+        <option value="Review">Review</option>
+        <option value="Reflection">Reflection</option>
+      </select>
+
+      <br>
+
+      <textarea
+        id="bookText"
+        placeholder="Write your review or reflection..."></textarea>
+
+      <br>
+
+      <button onclick="addReview()">Add</button>
+
+      <hr>
+
+    </div>
+
+    <div id="review-list"></div>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+
+/* FIREBASE */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.appspot.com",
+  messagingSenderId: "241512022087",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const auth = getAuth(app);
+
+const col = collection(db, "bookReviews");
+
+let isAdmin = false;
+
+
+/* AUTH */
+
+onAuthStateChanged(auth, async (user) => {
+
+  console.log("AUTH:", user);
+
+  if (
+    user &&
+    user.email &&
+    user.email.toLowerCase() === "lucioegbert18@gmail.com"
+  ) {
+
+    isAdmin = true;
+
+    document.getElementById("admin-panel").style.display = "block";
+
+  } else {
+
+    isAdmin = false;
+
+    document.getElementById("admin-panel").style.display = "none";
+
+  }
+
+  await loadReviews();
+
+});
+
+
+/* ADD REVIEW */
+
+window.addReview = async function () {
+
+  if (!isAdmin) return;
+
+  const title =
+    document.getElementById("bookTitle").value.trim();
+
+  const author =
+    document.getElementById("bookAuthor").value.trim();
+
+  const type =
+    document.getElementById("bookType").value;
+
+  const text =
+    document.getElementById("bookText").value.trim();
+
+
+  if (!title || !author || !text) return;
+
+
+  await addDoc(col, {
+
+    title,
+    author,
+    type,
+    text,
+    date: new Date().toISOString()
+
+  });
+
+
+  document.getElementById("bookTitle").value = "";
+
+  document.getElementById("bookAuthor").value = "";
+
+  document.getElementById("bookText").value = "";
+
+
+  await loadReviews();
+
+};
+
+
+/* LOAD REVIEWS */
+
+async function loadReviews() {
+
+  const container =
+    document.getElementById("review-list");
+
+  container.innerHTML = "";
+
+
+  const q =
+    query(col, orderBy("date", "desc"));
+
+  const snapshot =
+    await getDocs(q);
+
+
+  snapshot.forEach((d) => {
+
+    const review = d.data();
+
+    const id = d.id;
+
+
+    const div =
+      document.createElement("div");
+
+    div.className = "review";
+
+
+    div.innerHTML = `
+
+      <div class="review-title">
+
+        <strong>
+          ${review.title}
+        </strong>
+
+        <span>
+          by ${review.author}
+        </span>
+
+      </div>
+
+
+      <div class="review-type">
+
+        ${review.type}
+
+      </div>
+
+
+      <div class="review-text">
+
+        ${review.text}
+
+      </div>
+
+
+      <div class="date">
+
+        ${new Date(review.date).toLocaleString()}
+
+      </div>
+
+    `;
+
+
+    /* ADMIN BUTTONS */
+
+    if (isAdmin) {
+
+      const editBtn =
+        document.createElement("button");
+
+      editBtn.textContent = "Edit";
+
+      editBtn.onclick = () => {
+
+        editReview(
+          id,
+          review.title,
+          review.author,
+          review.type,
+          review.text
+        );
+
+      };
+
+
+      const deleteBtn =
+        document.createElement("button");
+
+      deleteBtn.textContent = "Delete";
+
+      deleteBtn.onclick = () => {
+
+        deleteReview(id);
+
+      };
+
+
+      div.appendChild(editBtn);
+
+      div.appendChild(deleteBtn);
+
+    }
+
+
+    container.appendChild(div);
+
+  });
+
+}
+
+
+/* EDIT */
+
+window.editReview = async function (
+  id,
+  title,
+  author,
+  type,
+  text
+) {
+
+  if (!isAdmin) return;
+
+
+  const newTitle =
+    prompt("Title:", title);
+
+  if (newTitle === null) return;
+
+
+  const newAuthor =
+    prompt("Author:", author);
+
+  if (newAuthor === null) return;
+
+
+  const newType =
+    prompt(
+      "Type (Review or Reflection):",
+      type
+    );
+
+  if (newType === null) return;
+
+
+  const newText =
+    prompt("Review / Reflection:", text);
+
+  if (newText === null) return;
+
+
+  if (
+    !newTitle.trim() ||
+    !newAuthor.trim() ||
+    !newText.trim()
+  ) return;
+
+
+  await updateDoc(
+    doc(db, "bookReviews", id),
+    {
+      title: newTitle.trim(),
+      author: newAuthor.trim(),
+      type: newType.trim(),
+      text: newText.trim()
+    }
+  );
+
+
+  await loadReviews();
+
+};
+
+
+/* DELETE */
+
+window.deleteReview = async function (id) {
+
+  if (!isAdmin) return;
+
+
+  if (!confirm("Delete this review/reflection?"))
+    return;
+
+
+  await deleteDoc(
+    doc(db, "bookReviews", id)
+  );
+
+
+  await loadReviews();
+
+};
+
+</script>
+
+</body>
+</html>
