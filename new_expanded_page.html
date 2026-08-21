@@ -207,7 +207,7 @@ async function loadMedia() {
 
   const snapshot = await getDocs(col);
 
-  // Sort by date added — newest first
+  // Sort newest added items first
   const documents = snapshot.docs.sort((a, b) => {
     return new Date(b.data().date) - new Date(a.data().date);
   });
