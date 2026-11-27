@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -171,10 +171,11 @@ onAuthStateChanged(auth, async (user) => {
 
   console.log("AUTH:", user);
 
-  if (user && user.uid === "9l4WslIGuJZz5M9v5Bxi2MyNgWC3") {
-    isAdmin = true;
-    document.getElementById("admin-panel").style.display = "block";
-  } {
+  if (
+    user &&
+    user.email &&
+    user.email.toLowerCase() === "lucioegbert18@gmail.com"
+  ) {
     isAdmin = true;
 
     document.getElementById("admin-panel").style.display = "block";
