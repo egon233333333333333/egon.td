@@ -381,30 +381,68 @@ function renderEntry(id, e) {
     const tools = document.createElement("div");
     tools.className = "admin-tools";
 
+    // reply editor, hidden until "Reply" is clicked
+    const editor = document.createElement("div");
+    editor.style.display = "none";
+
     const replyBox = document.createElement("textarea");
-    replyBox.rows = 2;
+    replyBox.rows = 3;
     replyBox.maxLength = MAX_REPLY;
-    replyBox.placeholder = "Write a reply...";
+    replyBox.placeholder = "Write your reply...";
     replyBox.value = e.reply || "";
 
-    const replyBtn = document.createElement("button");
-    replyBtn.textContent = e.reply ? "Update reply" : "Reply";
-    replyBtn.onclick = () => saveReply(id, replyBox.value);
+    const sendBtn = document.createElement("button");
+    sendBtn.type = "button";
+    sendBtn.textContent = "Send reply";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.textContent = "Cancel";
+
+    editor.append(replyBox, document.createElement("br"), sendBtn, cancelBtn);
+
+    // main buttons
+    const openBtn = document.createElement("button");
+    openBtn.type = "button";
+    openBtn.textContent = e.reply ? "Edit reply" : "Reply";
+
+    openBtn.onclick = () => {
+      editor.style.display = "block";
+      openBtn.style.display = "none";
+      replyBox.focus();
+    };
+
+    cancelBtn.onclick = () => {
+      editor.style.display = "none";
+      openBtn.style.display = "";
+      replyBox.value = e.reply || "";
+    };
+
+    sendBtn.onclick = async () => {
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Saving...";
+      await saveReply(id, replyBox.value);
+      // if the save worked the list re-renders; if not, let them retry
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Send reply";
+    };
 
     const delBtn = document.createElement("button");
+    delBtn.type = "button";
     delBtn.textContent = "Delete";
     delBtn.onclick = () => deleteEntry(id);
 
-    tools.append(replyBox, document.createElement("br"), replyBtn);
+    tools.append(openBtn);
 
     if (e.reply) {
       const delReplyBtn = document.createElement("button");
+      delReplyBtn.type = "button";
       delReplyBtn.textContent = "Remove reply";
       delReplyBtn.onclick = () => removeReply(id);
       tools.appendChild(delReplyBtn);
     }
 
-    tools.appendChild(delBtn);
+    tools.append(delBtn, editor);
     div.appendChild(tools);
   }
 
@@ -441,42 +479,59 @@ async function loadEntries() {
   }
 }
 
+/* ADMIN ACTIONS (errors are shown so failures aren't silent) */
+async function runAdmin(action, failMsg) {
+  try {
+    await action();
+    await loadEntries();
+  } catch (err) {
+    console.error(err);
+    const code = err && err.code ? err.code : "unknown";
+    let hint = "";
+    if (code === "permission-denied") {
+      hint = "\n\nFirestore rejected this. Check your security rules and that you are signed in with " + ADMIN_EMAIL + ".";
+    }
+    alert(failMsg + "\nError: " + code + (err && err.message ? " - " + err.message : "") + hint);
+  }
+}
+
 /* ADMIN: SAVE REPLY */
-async function saveReply(id, text) {
-  if (!isAdmin) return;
+function saveReply(id, text) {
+  if (!isAdmin) {
+    alert("You're not signed in as admin on this page.");
+    return;
+  }
 
   const reply = text.trim();
-  if (!reply) return;
+  if (!reply) {
+    alert("Write a reply first.");
+    return;
+  }
 
-  await updateDoc(doc(db, "guestbook", id), {
+  return runAdmin(() => updateDoc(doc(db, "guestbook", id), {
     reply: reply.slice(0, MAX_REPLY),
     replyDate: new Date().toISOString()
-  });
-
-  await loadEntries();
+  }), "Couldn't save the reply.");
 }
 
 /* ADMIN: REMOVE REPLY */
-async function removeReply(id) {
+function removeReply(id) {
   if (!isAdmin) return;
   if (!confirm("Remove this reply?")) return;
 
-  await updateDoc(doc(db, "guestbook", id), {
+  return runAdmin(() => updateDoc(doc(db, "guestbook", id), {
     reply: deleteField(),
     replyDate: deleteField()
-  });
-
-  await loadEntries();
+  }), "Couldn't remove the reply.");
 }
 
 /* ADMIN: DELETE ENTRY */
-async function deleteEntry(id) {
+function deleteEntry(id) {
   if (!isAdmin) return;
   if (!confirm("Delete this message?")) return;
 
-  await deleteDoc(doc(db, "guestbook", id));
-
-  await loadEntries();
+  return runAdmin(() => deleteDoc(doc(db, "guestbook", id)),
+    "Couldn't delete the message.");
 }
 </script>
 
