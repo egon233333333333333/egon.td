@@ -211,10 +211,7 @@ label {
 
     <!-- GUEST FORM -->
     <div id="guest-form">
-      <label for="guestName">name</label>
-      <input type="text" id="guestName" maxlength="40" placeholder="your name (or anything)" autocomplete="nickname">
-
-      <label for="guestMessage">message</label>
+      <label for="guestMessage">message (posted anonymously)</label>
       <textarea id="guestMessage" rows="4" maxlength="500" placeholder="say hi..."></textarea>
       <div class="counter"><span id="charCount">0</span>/500</div>
 
@@ -281,7 +278,6 @@ const MAX_REPLY = 500;
 let isAdmin = false;
 let threads = {};
 
-const nameEl = document.getElementById("guestName");
 const msgEl = document.getElementById("guestMessage");
 const countEl = document.getElementById("charCount");
 const signBtn = document.getElementById("signBtn");
@@ -313,7 +309,7 @@ signBtn.addEventListener("click", async () => {
   // bots fill the hidden field
   if (document.getElementById("website").value) return;
 
-  const name = nameEl.value.trim() || "anonymous";
+  const name = "anonymous";
   const message = msgEl.value.trim();
 
   if (!message) {
@@ -438,15 +434,6 @@ function renderEntry(id, e, followups) {
     const form = document.createElement("div");
     form.style.display = "none";
 
-    let nameIn = null;
-    if (!isAdmin) {
-      nameIn = document.createElement("input");
-      nameIn.type = "text";
-      nameIn.maxLength = MAX_NAME;
-      nameIn.placeholder = "your name (or anything)";
-      form.append(nameIn);
-    }
-
     const msgIn = document.createElement("textarea");
     msgIn.rows = 3;
     msgIn.maxLength = MAX_MESSAGE;
@@ -468,7 +455,7 @@ function renderEntry(id, e, followups) {
     openBtn.onclick = () => {
       form.style.display = "block";
       openBtn.style.display = "none";
-      (nameIn || msgIn).focus();
+      msgIn.focus();
     };
 
     cancel.onclick = () => {
@@ -500,7 +487,7 @@ function renderEntry(id, e, followups) {
       stat.textContent = "";
 
       try {
-        await postFollowup(id, nameIn ? nameIn.value.trim() : "", message, isAdmin);
+        await postFollowup(id, "anonymous", message, isAdmin);
         if (!isAdmin) {
           try { localStorage.setItem("gb_last", String(Date.now())); } catch (err) {}
         }
