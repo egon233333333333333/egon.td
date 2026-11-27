@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>guestbook</title>
+
+<style>
+body {
+  font-family: Times New Roman, sans-serif;
+  background-color: #877360;
+  margin: 0;
+  padding: 0;
+  color: grey;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#header {
+  background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title a {
+  color: #FFF073;
+  text-decoration: none;
+}
+
+.subtitle a {
+  color: grey;
+  font-family: Courier New;
+  text-decoration: none;
+}
+
+.content-container {
+  border: 1px solid grey;
+  background-color: #EBE4E4;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: left;
+  color: #333;
+}
+
+/* LINKS */
+a {
+  color: black;
+  text-decoration: none;
+}
+
+/* FORMS */
+input, textarea, button {
+  font-family: Times New Roman, sans-serif;
+  font-size: 1em;
+  border: 1px solid #333;
+  padding: 6px;
+  margin-top: 5px;
+  box-sizing: border-box;
+}
+
+input, textarea {
+  width: 100%;
+  background: #f5f5f5;
+  color: #333;
+}
+
+button {
+  background: transparent;
+  color: black;
+  cursor: pointer;
+}
+
+button:hover {
+  background: brown;
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background: transparent;
+  color: black;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+.counter {
+  font-size: 0.8em;
+  color: gray;
+  text-align: right;
+}
+
+#status {
+  margin-top: 8px;
+  font-size: 0.9em;
+  min-height: 1.2em;
+}
+
+#status.error {
+  color: brown;
+}
+
+/* honeypot: hidden from people, visible to bots */
+.hp {
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ENTRIES */
+#entries {
+  margin-top: 20px;
+}
+
+.entry {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.entry-name {
+  font-weight: bold;
+  color: black;
+}
+
+.entry-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 4px 0;
+}
+
+.date {
+  font-size: 0.8em;
+  color: gray;
+}
+
+.reply {
+  margin: 10px 0 0 20px;
+  padding-left: 12px;
+  border-left: 3px solid #877360;
+}
+
+.reply-name {
+  font-weight: bold;
+  color: brown;
+}
+
+.admin-tools {
+  margin-top: 8px;
+}
+
+.admin-tools textarea {
+  margin-bottom: 4px;
+}
+
+.admin-tools button {
+  margin-right: 5px;
+}
+
+.empty {
+  color: gray;
+  font-style: italic;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div id="header">
+    <h1 class="title"><a href="index.html">egon.td</a></h1>
+    <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
+  </div>
+
+  <div class="content-container">
+
+    <h1>guestbook</h1>
+
+    <p><a href="index.html">back to home</a></p>
+
+    <p>leave a message. i'll reply when i can.</p>
+
+    <!-- GUEST FORM -->
+    <div id="guest-form">
+      <label for="guestName">name</label>
+      <input type="text" id="guestName" maxlength="40" placeholder="your name (or anything)" autocomplete="nickname">
+
+      <label for="guestMessage">message</label>
+      <textarea id="guestMessage" rows="4" maxlength="500" placeholder="say hi..."></textarea>
+      <div class="counter"><span id="charCount">0</span>/500</div>
+
+      <!-- honeypot -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">leave this empty</label>
+        <input type="text" id="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <button id="signBtn" type="button">Sign guestbook</button>
+      <div id="status" role="status"></div>
+    </div>
+
+    <hr>
+
+    <div id="entries"><p class="empty">Loading messages, please wait...</p></div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  deleteField,
+  doc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.appspot.com",
+  messagingSenderId: "241512022087",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const col = collection(db, "guestbook");
+
+const ADMIN_EMAIL = "lucioegbert18@gmail.com";
+const COOLDOWN_MS = 60 * 1000;
+const MAX_NAME = 40;
+const MAX_MESSAGE = 500;
+const MAX_REPLY = 500;
+
+let isAdmin = false;
+
+const nameEl = document.getElementById("guestName");
+const msgEl = document.getElementById("guestMessage");
+const countEl = document.getElementById("charCount");
+const signBtn = document.getElementById("signBtn");
+const statusEl = document.getElementById("status");
+const entriesEl = document.getElementById("entries");
+
+function setStatus(text, isError = false) {
+  statusEl.textContent = text;
+  statusEl.className = isError ? "error" : "";
+}
+
+msgEl.addEventListener("input", () => {
+  countEl.textContent = msgEl.value.length;
+});
+
+/* AUTH CHECK */
+onAuthStateChanged(auth, async (user) => {
+  isAdmin = !!(
+    user &&
+    user.email &&
+    user.email.toLowerCase() === ADMIN_EMAIL
+  );
+  await loadEntries();
+});
+
+/* SIGN */
+signBtn.addEventListener("click", async () => {
+
+  // bots fill the hidden field
+  if (document.getElementById("website").value) return;
+
+  const name = nameEl.value.trim() || "anonymous";
+  const message = msgEl.value.trim();
+
+  if (!message) {
+    setStatus("Write a message first.", true);
+    return;
+  }
+
+  // simple per-browser cooldown (not real security, just friction)
+  try {
+    const last = Number(localStorage.getItem("gb_last") || 0);
+    const wait = COOLDOWN_MS - (Date.now() - last);
+    if (wait > 0) {
+      setStatus("Please wait " + Math.ceil(wait / 1000) + "s before posting again.", true);
+      return;
+    }
+  } catch (e) { /* storage unavailable, skip cooldown */ }
+
+  signBtn.disabled = true;
+  setStatus("Posting...");
+
+  try {
+    await addDoc(col, {
+      name: name.slice(0, MAX_NAME),
+      message: message.slice(0, MAX_MESSAGE),
+      date: new Date().toISOString()
+    });
+
+    try { localStorage.setItem("gb_last", String(Date.now())); } catch (e) {}
+
+    msgEl.value = "";
+    countEl.textContent = "0";
+    setStatus("Thanks, your message is in the guestbook.");
+    await loadEntries();
+  } catch (err) {
+    console.error(err);
+    setStatus("Couldn't post your message. Try again in a bit.", true);
+  } finally {
+    signBtn.disabled = false;
+  }
+});
+
+/* RENDER ONE ENTRY (textContent only, so guests can't inject HTML) */
+function renderEntry(id, e) {
+
+  const div = document.createElement("div");
+  div.className = "entry";
+
+  const nameDiv = document.createElement("div");
+  nameDiv.className = "entry-name";
+  nameDiv.textContent = e.name || "anonymous";
+
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "entry-message";
+  msgDiv.textContent = e.message || "";
+
+  const dateDiv = document.createElement("div");
+  dateDiv.className = "date";
+  dateDiv.textContent = new Date(e.date).toLocaleString();
+
+  div.append(nameDiv, msgDiv, dateDiv);
+
+  /* REPLY */
+  if (e.reply) {
+    const rep = document.createElement("div");
+    rep.className = "reply";
+
+    const repName = document.createElement("div");
+    repName.className = "reply-name";
+    repName.textContent = "egon replied:";
+
+    const repText = document.createElement("div");
+    repText.className = "entry-message";
+    repText.textContent = e.reply;
+
+    const repDate = document.createElement("div");
+    repDate.className = "date";
+    repDate.textContent = e.replyDate ? new Date(e.replyDate).toLocaleString() : "";
+
+    rep.append(repName, repText, repDate);
+    div.appendChild(rep);
+  }
+
+  /* ADMIN TOOLS */
+  if (isAdmin) {
+    const tools = document.createElement("div");
+    tools.className = "admin-tools";
+
+    const replyBox = document.createElement("textarea");
+    replyBox.rows = 2;
+    replyBox.maxLength = MAX_REPLY;
+    replyBox.placeholder = "Write a reply...";
+    replyBox.value = e.reply || "";
+
+    const replyBtn = document.createElement("button");
+    replyBtn.textContent = e.reply ? "Update reply" : "Reply";
+    replyBtn.onclick = () => saveReply(id, replyBox.value);
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "Delete";
+    delBtn.onclick = () => deleteEntry(id);
+
+    tools.append(replyBox, document.createElement("br"), replyBtn);
+
+    if (e.reply) {
+      const delReplyBtn = document.createElement("button");
+      delReplyBtn.textContent = "Remove reply";
+      delReplyBtn.onclick = () => removeReply(id);
+      tools.appendChild(delReplyBtn);
+    }
+
+    tools.appendChild(delBtn);
+    div.appendChild(tools);
+  }
+
+  return div;
+}
+
+/* LOAD */
+async function loadEntries() {
+
+  try {
+    const q = query(col, orderBy("date", "desc"));
+    const snapshot = await getDocs(q);
+
+    entriesEl.textContent = "";
+
+    if (snapshot.empty) {
+      const p = document.createElement("p");
+      p.className = "empty";
+      p.textContent = "No messages yet. Be the first to sign.";
+      entriesEl.appendChild(p);
+      return;
+    }
+
+    snapshot.forEach((d) => {
+      entriesEl.appendChild(renderEntry(d.id, d.data()));
+    });
+  } catch (err) {
+    console.error(err);
+    entriesEl.textContent = "";
+    const p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = "Couldn't load messages. Refresh to try again.";
+    entriesEl.appendChild(p);
+  }
+}
+
+/* ADMIN: SAVE REPLY */
+async function saveReply(id, text) {
+  if (!isAdmin) return;
+
+  const reply = text.trim();
+  if (!reply) return;
+
+  await updateDoc(doc(db, "guestbook", id), {
+    reply: reply.slice(0, MAX_REPLY),
+    replyDate: new Date().toISOString()
+  });
+
+  await loadEntries();
+}
+
+/* ADMIN: REMOVE REPLY */
+async function removeReply(id) {
+  if (!isAdmin) return;
+  if (!confirm("Remove this reply?")) return;
+
+  await updateDoc(doc(db, "guestbook", id), {
+    reply: deleteField(),
+    replyDate: deleteField()
+  });
+
+  await loadEntries();
+}
+
+/* ADMIN: DELETE ENTRY */
+async function deleteEntry(id) {
+  if (!isAdmin) return;
+  if (!confirm("Delete this message?")) return;
+
+  await deleteDoc(doc(db, "guestbook", id));
+
+  await loadEntries();
+}
+</script>
+
+</body>
+</html>
+
