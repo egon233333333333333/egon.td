@@ -265,7 +265,7 @@ const auth = getAuth(app);
 const col = collection(db, "guestbook");
 const followCol = collection(db, "guestbook_followups");
 
-const ADMIN_EMAIL = "lucioegbert18@gmail.com";
+const ADMIN_UID = "9l4WslIGuJZz5M9v5Bxi2MyNgWC3";
 const COOLDOWN_MS = 60 * 1000;
 const MAX_NAME = 40;
 const MAX_MESSAGE = 500;
@@ -291,11 +291,7 @@ msgEl.addEventListener("input", () => {
 
 /* AUTH CHECK */
 onAuthStateChanged(auth, async (user) => {
-  isAdmin = !!(
-    user &&
-    user.email &&
-    user.email.toLowerCase() === ADMIN_EMAIL
-  );
+  isAdmin = !!(user && user.uid === ADMIN_UID);
   await loadEntries();
 });
 
@@ -628,7 +624,7 @@ async function runAdmin(action, failMsg) {
     const code = err && err.code ? err.code : "unknown";
     let hint = "";
     if (code === "permission-denied") {
-      hint = "\n\nFirestore rejected this. Check your security rules and that you are signed in with " + ADMIN_EMAIL + ".";
+      hint = "\n\nSite rejected this. Check your security rules and that you are signed in as admin.";
     }
     alert(failMsg + "\nError: " + code + (err && err.message ? " - " + err.message : "") + hint);
   }
