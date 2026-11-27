@@ -25,6 +25,12 @@
     .header-links a:hover {
       text-decoration: underline;
     }
+    .subtitle a {
+      color: grey;
+      font-family: Courier New;
+      text-decoration: none;
+      font-style: italic;
+    }
   `;
 
   const html = `
