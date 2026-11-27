@@ -167,6 +167,24 @@ label {
   margin-right: 5px;
 }
 
+.guest-reply {
+  border-left-color: #aaa;
+}
+
+.guest-reply .reply-name {
+  color: black;
+}
+
+.thread-form {
+  margin: 8px 0 0 20px;
+}
+
+.thread-form .thread-status {
+  font-size: 0.85em;
+  color: brown;
+  min-height: 1.1em;
+}
+
 .empty {
   color: gray;
   font-style: italic;
@@ -252,6 +270,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const col = collection(db, "guestbook");
+const followCol = collection(db, "guestbook_followups");
 
 const ADMIN_EMAIL = "lucioegbert18@gmail.com";
 const COOLDOWN_MS = 60 * 1000;
@@ -260,6 +279,7 @@ const MAX_MESSAGE = 500;
 const MAX_REPLY = 500;
 
 let isAdmin = false;
+let threads = {};
 
 const nameEl = document.getElementById("guestName");
 const msgEl = document.getElementById("guestMessage");
@@ -336,7 +356,7 @@ signBtn.addEventListener("click", async () => {
 });
 
 /* RENDER ONE ENTRY (textContent only, so guests can't inject HTML) */
-function renderEntry(id, e) {
+function renderEntry(id, e, followups) {
 
   const div = document.createElement("div");
   div.className = "entry";
@@ -374,6 +394,127 @@ function renderEntry(id, e) {
 
     rep.append(repName, repText, repDate);
     div.appendChild(rep);
+  }
+
+  /* THREAD (follow-ups) */
+  (followups || []).forEach((f) => {
+    const fu = document.createElement("div");
+    fu.className = "reply" + (f.fromAdmin ? "" : " guest-reply");
+
+    const fuName = document.createElement("div");
+    fuName.className = "reply-name";
+    fuName.textContent = f.fromAdmin ? "egon replied:" : (f.name || "anonymous") + " replied:";
+
+    const fuText = document.createElement("div");
+    fuText.className = "entry-message";
+    fuText.textContent = f.message || "";
+
+    const fuDate = document.createElement("div");
+    fuDate.className = "date";
+    fuDate.textContent = new Date(f.date).toLocaleString();
+
+    fu.append(fuName, fuText, fuDate);
+
+    if (isAdmin) {
+      const fuDel = document.createElement("button");
+      fuDel.type = "button";
+      fuDel.textContent = "Delete";
+      fuDel.onclick = () => deleteFollowup(f.id);
+      fu.appendChild(fuDel);
+    }
+
+    div.appendChild(fu);
+  });
+
+  /* REPLY IN THREAD (only once egon has replied) */
+  if (e.reply) {
+    const wrap = document.createElement("div");
+    wrap.className = "thread-form";
+
+    const openBtn = document.createElement("button");
+    openBtn.type = "button";
+    openBtn.textContent = "Reply in thread";
+
+    const form = document.createElement("div");
+    form.style.display = "none";
+
+    let nameIn = null;
+    if (!isAdmin) {
+      nameIn = document.createElement("input");
+      nameIn.type = "text";
+      nameIn.maxLength = MAX_NAME;
+      nameIn.placeholder = "your name (or anything)";
+      form.append(nameIn);
+    }
+
+    const msgIn = document.createElement("textarea");
+    msgIn.rows = 3;
+    msgIn.maxLength = MAX_MESSAGE;
+    msgIn.placeholder = "Write a reply...";
+
+    const send = document.createElement("button");
+    send.type = "button";
+    send.textContent = "Send";
+
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = "Cancel";
+
+    const stat = document.createElement("div");
+    stat.className = "thread-status";
+
+    form.append(msgIn, document.createElement("br"), send, cancel, stat);
+
+    openBtn.onclick = () => {
+      form.style.display = "block";
+      openBtn.style.display = "none";
+      (nameIn || msgIn).focus();
+    };
+
+    cancel.onclick = () => {
+      form.style.display = "none";
+      openBtn.style.display = "";
+      stat.textContent = "";
+    };
+
+    send.onclick = async () => {
+      const message = msgIn.value.trim();
+      if (!message) {
+        stat.textContent = "Write a reply first.";
+        return;
+      }
+
+      if (!isAdmin) {
+        try {
+          const last = Number(localStorage.getItem("gb_last") || 0);
+          const wait = COOLDOWN_MS - (Date.now() - last);
+          if (wait > 0) {
+            stat.textContent = "Please wait " + Math.ceil(wait / 1000) + "s before posting again.";
+            return;
+          }
+        } catch (err) { /* storage unavailable */ }
+      }
+
+      send.disabled = true;
+      send.textContent = "Sending...";
+      stat.textContent = "";
+
+      try {
+        await postFollowup(id, nameIn ? nameIn.value.trim() : "", message, isAdmin);
+        if (!isAdmin) {
+          try { localStorage.setItem("gb_last", String(Date.now())); } catch (err) {}
+        }
+        await loadEntries();
+      } catch (err) {
+        console.error(err);
+        stat.textContent = "Couldn't send your reply (" + (err && err.code ? err.code : "error") + ").";
+        send.disabled = false;
+        send.textContent = "Send";
+      }
+    };
+
+    wrap.append(openBtn, form);
+    div.appendChild(wrap);
   }
 
   /* ADMIN TOOLS */
@@ -453,8 +594,23 @@ function renderEntry(id, e) {
 async function loadEntries() {
 
   try {
-    const q = query(col, orderBy("date", "desc"));
-    const snapshot = await getDocs(q);
+    const [snapshot, fuSnap] = await Promise.all([
+      getDocs(query(col, orderBy("date", "desc"))),
+      // if follow-ups can't load (e.g. rules not updated yet), still show the messages
+      getDocs(query(followCol, orderBy("date", "asc"))).catch((err) => {
+        console.error("Follow-ups failed to load:", err);
+        return null;
+      })
+    ]);
+
+    threads = {};
+    if (fuSnap) {
+      fuSnap.forEach((d) => {
+        const f = d.data();
+        f.id = d.id;
+        (threads[f.parentId] = threads[f.parentId] || []).push(f);
+      });
+    }
 
     entriesEl.textContent = "";
 
@@ -467,7 +623,7 @@ async function loadEntries() {
     }
 
     snapshot.forEach((d) => {
-      entriesEl.appendChild(renderEntry(d.id, d.data()));
+      entriesEl.appendChild(renderEntry(d.id, d.data(), threads[d.id]));
     });
   } catch (err) {
     console.error(err);
@@ -530,8 +686,34 @@ function deleteEntry(id) {
   if (!isAdmin) return;
   if (!confirm("Delete this message?")) return;
 
-  return runAdmin(() => deleteDoc(doc(db, "guestbook", id)),
-    "Couldn't delete the message.");
+  const kids = (threads[id] || []).map((f) => f.id);
+
+  return runAdmin(async () => {
+    for (const fid of kids) {
+      await deleteDoc(doc(db, "guestbook_followups", fid));
+    }
+    await deleteDoc(doc(db, "guestbook", id));
+  }, "Couldn't delete the message.");
+}
+
+/* THREAD: POST A FOLLOW-UP (guest or admin) */
+async function postFollowup(parentId, name, message, fromAdmin) {
+  await addDoc(followCol, {
+    parentId,
+    name: fromAdmin ? "egon" : (name || "anonymous").slice(0, MAX_NAME),
+    message: message.slice(0, MAX_MESSAGE),
+    date: new Date().toISOString(),
+    fromAdmin: !!fromAdmin
+  });
+}
+
+/* ADMIN: DELETE A FOLLOW-UP */
+function deleteFollowup(id) {
+  if (!isAdmin) return;
+  if (!confirm("Delete this reply?")) return;
+
+  return runAdmin(() => deleteDoc(doc(db, "guestbook_followups", id)),
+    "Couldn't delete the reply.");
 }
 </script>
 
