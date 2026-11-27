@@ -34,6 +34,16 @@
       text-align: center;
       margin-bottom: 20px;
     }
+
+	.header-links {
+  display: flex;
+  justify-content: space-between;
+}
+
+.header-links a {
+  color: black;
+  text-decoration: none;
+} 
     .container {
       max-width: 800px;
       margin: 0 auto;
@@ -194,10 +204,11 @@
     <div id="header">
       <h1 class="title"><a href="index.html">egon.td</a></h1>
 	  <h3 class="subtitle"><a href="index.html">for the algorithm averse.</a></h3>
-	  <a class="link" href="works.html" style="color: black;">about</a>
-	  <a class="link" href="works.html" style="color: black;">videos</a>
-	  <a class="link" href="guestbook.html" style="color: black;">msg</a>
-	  </p>
+	  <div class="header-links">
+  <a class="link" href="works.html">about</a>
+  <a class="link" href="works.html">videos</a>
+  <a class="link" href="guestbook.html">msg</a>
+</div>
     </div>
 	 
     <div class="content-container">
