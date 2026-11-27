@@ -314,7 +314,6 @@ const firebaseConfig = {
   appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
 };
 
-const ADMIN_UID = "9l4WslIGuJZz5M9v5Bxi2MyNgWC3";
 const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
@@ -332,10 +331,11 @@ onAuthStateChanged(auth, async (user) => {
 
   console.log("AUTH:", user);
 
-  if (user && user.uid === "9l4WslIGuJZz5M9v5Bxi2MyNgWC3") {
-    isAdmin = true;
-    document.getElementById("admin-panel").style.display = "block";
-  } {
+  if (
+    user &&
+    user.email &&
+    user.email.toLowerCase() === "lucioegbert18@gmail.com"
+  ) {
 
     isAdmin = true;
 
