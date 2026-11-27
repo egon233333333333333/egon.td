@@ -25,7 +25,7 @@
     .header-links a:hover {
       text-decoration: underline;
     }
-    .subtitle a {
+    .subtitle {
       color: grey;
       font-family: Courier New;
       text-decoration: none;
@@ -36,7 +36,7 @@
   const html = `
     <div id="header">
       <h1 class="title"><a href="index.html">egon.td</a></h1>
-      <h3 class="subtitle"><a href="index.html">"Wait for the common sense of the morning"</a></h3>
+      <h3 class="subtitle">"Wait for the common sense of the morning"</h3>
       <div class="header-links">
         <a href="works.html">about</a>
         <a href="works.html">videos</a>
