@@ -38,8 +38,8 @@
       <h1 class="title"><a href="index.html">egon.td</a></h1>
       <h3 class="subtitle">"Wait for the common sense of the morning."</h3>
       <div class="header-links">
-        <a href="works.html">about</a>
-        <a href="works.html">videos</a>
+        <a href="404.html">about</a>
+        <a href="404.html">videos</a>
         <a href="msg.html">msg</a>
       </div>
     </div>
