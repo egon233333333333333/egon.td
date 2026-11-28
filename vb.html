@@ -1,25 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/jpeg">
   <title>egon.td</title>
 
   <style>
-
     body {
-      font-family: Times New Roman, sans-serif;
+      font-family: "Times New Roman", Times, serif;
       background-image: url("https://static.vecteezy.com/system/resources/previews/024/763/523/non_2x/volleyball-illustration-on-blue-background-yellow-and-white-color-with-blue-outline-seamless-pattern-hand-drawn-doodle-art-for-wallpaper-wrapping-paper-backdrop-fabric-sport-icon-vector.jpg");
       margin: 0;
-      padding: 0;
-      align-content: left;
+      padding: 0 8px 30px;
       color: white;
-    }
-
-    img {
-      width: 100%;
-      height: auto;
     }
 
     .container {
@@ -27,6 +20,7 @@
       margin: 0 auto;
     }
 
+    /* ===== HEADER (header.js uses these classes) ===== */
     #header {
       background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
       background-size: 100% 100%;
@@ -43,19 +37,83 @@
 
     .subtitle a {
       color: grey;
-      font-family: Courier New;
+      font-family: "Courier New", monospace;
       text-decoration: none;
     }
 
+    /* ===== MAIN BOX ===== */
     .content-container {
-      border: 1px solid #666;
+      border: 1px solid grey;
       background-color: #000000;
       padding: 20px;
       margin-top: 20px;
       text-align: left;
-      border-color: grey;
     }
 
+    /* ===== LINKS ===== */
+    .link-row {
+      margin-bottom: 12px;
+    }
+
+    .link-row a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .link-row a:hover {
+      text-decoration: underline;
+    }
+
+    #status {
+      font-family: "Courier New", monospace;
+      font-size: 0.9em;
+      color: grey;
+    }
+
+    /* ===== ADMIN ===== */
+    #admin-panel {
+      margin-bottom: 18px;
+    }
+
+    #admin-panel input {
+      display: block;
+      width: 100%;
+      max-width: 500px;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+      padding: 6px 8px;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 1em;
+      color: white;
+      background: #111;
+      border: 1px solid grey;
+    }
+
+    #admin-panel input:focus {
+      outline: none;
+      border-color: white;
+    }
+
+    button {
+      margin: 4px 6px 0 0;
+      padding: 4px 10px;
+      font-family: "Times New Roman", Times, serif;
+      background: transparent;
+      color: white;
+      border: 1px solid grey;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: brown;
+      border-color: brown;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid grey;
+      margin: 14px 0;
+    }
   </style>
 </head>
 
@@ -63,18 +121,234 @@
 
   <div class="container">
 
-<div id="site-header"></div>
-<script src="header.js"></script>
+    <div id="site-header"></div>
+    <script src="header.js"></script>
 
     <div class="content-container">
 
-      <a class="link" href="https://vblineup.com/women-svleague2027" style="color: white">VBLineup
-</a><br><br>
-      <a class="link" href="https://discord.gg/nxQ6ww2W8" style="color: white">join the discord</a><br>
+      <!-- ADMIN PANEL (only shown when you are signed in) -->
+      <div id="admin-panel" style="display:none;">
+        <input type="text" id="linkLabel" placeholder="Label (e.g. VBLineup)">
+        <input type="text" id="linkUrl" placeholder="URL (https://...)">
+        <button onclick="addLink()">Add Link</button>
+        <hr>
+      </div>
+
+      <div id="status"></div>
+      <div id="links"></div>
 
     </div>
 
   </div>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7JjchLZ7qcwbBk1BMmYtAPqNrcQcJevA",
+  authDomain: "egontd-b9357.firebaseapp.com",
+  projectId: "egontd-b9357",
+  storageBucket: "egontd-b9357.appspot.com",
+  messagingSenderId: "241512022087",
+  appId: "1:241512022087:web:0ad7a133f1d146fdc4b162"
+};
+
+const ADMIN_UID = "9l4WslIGuJZz5M9v5Bxi2MyNgWC3";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const col = collection(db, "links");
+
+let isAdmin = false;
+
+/* only allow normal web links (blocks things like javascript:) */
+function cleanUrl(raw) {
+  let u = (raw || "").trim();
+  if (!u) return null;
+  if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+  try {
+    const parsed = new URL(u);
+    return (parsed.protocol === "http:" || parsed.protocol === "https:")
+      ? parsed.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/* AUTH CHECK */
+onAuthStateChanged(auth, async (user) => {
+  if (user && user.uid === ADMIN_UID) {
+    isAdmin = true;
+    document.getElementById("admin-panel").style.display = "block";
+  } else {
+    isAdmin = false;
+    document.getElementById("admin-panel").style.display = "none";
+  }
+
+  await loadLinks();
+});
+
+/* ADD */
+window.addLink = async function () {
+  if (!isAdmin) return;
+
+  const label = document.getElementById("linkLabel").value.trim();
+  const url = cleanUrl(document.getElementById("linkUrl").value);
+
+  if (!label) return;
+
+  if (!url) {
+    alert("That doesn't look like a valid web address.");
+    return;
+  }
+
+  try {
+    await addDoc(col, {
+      label,
+      url,
+      date: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't save. Check the console (F12) for the reason.");
+    return;
+  }
+
+  document.getElementById("linkLabel").value = "";
+  document.getElementById("linkUrl").value = "";
+
+  await loadLinks();
+};
+
+/* LOAD */
+async function loadLinks() {
+  const container = document.getElementById("links");
+  const status = document.getElementById("status");
+
+  container.innerHTML = "";
+  status.textContent = "";
+
+  let snapshot;
+  try {
+    snapshot = await getDocs(query(col, orderBy("date", "desc")));
+  } catch (err) {
+    console.error(err);
+    status.textContent = "couldn't load links.";
+    return;
+  }
+
+  if (snapshot.empty) {
+    status.textContent = "no links yet.";
+    return;
+  }
+
+  snapshot.forEach((d) => {
+    const item = d.data();
+    const id = d.id;
+
+    const row = document.createElement("div");
+    row.className = "link-row";
+
+    /* text is inserted as plain text, so nothing typed can run as code */
+    const safeUrl = cleanUrl(item.url);
+    const a = document.createElement("a");
+    a.textContent = item.label;
+    if (safeUrl) {
+      a.href = safeUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    }
+    row.appendChild(a);
+
+    /* ADMIN BUTTONS */
+    if (isAdmin) {
+      row.appendChild(document.createElement("br"));
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+      editBtn.onclick = () => editLink(id, item.label, item.url);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.onclick = () => deleteLink(id);
+
+      row.appendChild(editBtn);
+      row.appendChild(deleteBtn);
+    }
+
+    container.appendChild(row);
+  });
+}
+
+/* EDIT */
+window.editLink = async function (id, currentLabel, currentUrl) {
+  if (!isAdmin) return;
+
+  const newLabel = prompt("Label:", currentLabel);
+  if (newLabel === null) return;
+
+  const newUrlRaw = prompt("URL:", currentUrl);
+  if (newUrlRaw === null) return;
+
+  const newUrl = cleanUrl(newUrlRaw);
+
+  if (!newLabel.trim() || !newUrl) {
+    alert("Label and a valid web address are both required.");
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, "links", id), {
+      label: newLabel.trim(),
+      url: newUrl
+    });
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't save. Check the console (F12) for the reason.");
+    return;
+  }
+
+  await loadLinks();
+};
+
+/* DELETE */
+window.deleteLink = async function (id) {
+  if (!isAdmin) return;
+
+  if (!confirm("Delete this link?")) return;
+
+  try {
+    await deleteDoc(doc(db, "links", id));
+  } catch (err) {
+    console.error(err);
+    alert("Couldn't delete. Check the console (F12) for the reason.");
+    return;
+  }
+
+  await loadLinks();
+};
+</script>
+
 </body>
 </html>
+
