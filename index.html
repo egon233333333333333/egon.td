@@ -1,304 +1,231 @@
-﻿
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/jpeg">
   <title>egon.td</title>
+
   <style>
     body {
-      font-family: Times New Roman, sans-serif;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 16px;
+      line-height: 1.4;
       background-color: #877360;
       margin: 0;
-      padding: 0;
-	  align-content: left;
-	  color:grey;
-	  
+      padding: 0 8px 30px;
+      color: #000;
     }
 
-     img {
-       width: 100%;
-       height: auto;
-    }
-	  
-    #header {
-      background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
-	  background-size: 100% 100%; /* Stretches to fill width and height */
- 	  background-repeat: no-repeat;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-	.header-links {
-  display: flex;
-  justify-content: space-between;
-}
-
-.header-links a {
-  color: grey;
-  font-family: Courier New;
-  text-decoration: none;
-} 
     .container {
       max-width: 800px;
       margin: 0 auto;
-	  
     }
 
-
-	  
-	.title a {
-      color: #FFF073;
-      text-decoration: none; /* Remove underline */
-    }
-
-	.subtitle a {
-      color: grey;
-	  font-family: Courier New;
-      text-decoration: none; /* Remove underline */
-    }
-    .content-container {
-      border: 1px solid #666;
-	  background-color: #EBE4E4;
+    /* ===== HEADER (header.js uses these classes) ===== */
+    #header {
+      background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
       padding: 20px;
-      margin-top: 20px;
-      text-align: left; /* Align content to the left */
-	  border-color:grey;
-    }
-    .content-container .navigation {
+      text-align: center;
       margin-bottom: 20px;
     }
-    .navigation a {
-      color: grey;
+
+    .header-s {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .header-s a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
       text-decoration: none;
-      margin-right: 20px;
+      text-shadow: 1px 1px 0 #000;
     }
-    .footer {
-      background-color: #333;
-      color: #fff;
+
+    .header-s a:hover {
+      color: #FFF073;
+      text-decoration: underline;
+    }
+
+    .title a {
+      color: #FFF073;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .subtitle a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    /* ===== MAIN BOX ===== */
+    .content-container {
+      border: 3px ridge #5A3825;
+      background-color: #EBE4E4;
+      padding: 20px 24px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    /* classic link colors */
+    .content-container a:link    { color: #0000EE; text-decoration: underline; }
+    .content-container a:visited { color: #551A8B; }
+    .content-container a:hover   { color: #CC0000; }
+
+    h3 {
+      color: #5A3825;
+      font-size: 1.15em;
+      margin: 26px 0 8px;
+      padding-bottom: 2px;
+      border-bottom: 1px solid #5A3825;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #5A3825;
+      margin: 16px 0;
+    }
+
+    ul {
+      margin: 8px 0;
+      padding-left: 28px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    .intro {
+      margin: 0 0 14px;
+    }
+
+    .more {
+      margin: 8px 0 0 28px;
+    }
+
+    /* ===== VIDEO ===== */
+    .featured {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .featured h3 {
       text-align: center;
-      padding: 10px;
-      position: fixed;
-      bottom: 0;
+      border-bottom: 0;
+    }
+
+    .video-container iframe {
+      display: block;
       width: 100%;
-    }
-	.hidden {
-      display: none;
-    }
-    #reading-list {
-      list-style: none; /* Remove bullet points */
-      padding: 0;
-    }
-	#socials {
-      list-style: none; /* Remove bullet points */
-      padding: 0;
-    }
-	#socials a{
-      margin-bottom: 10px;
-	  text-decoration: none;
-	  color:black;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      border: 2px ridge #5A3825;
     }
 
-    #reading-list li {
-      margin-bottom: 10px;
-	  text-decoration: underline;
+    /* ===== 88x31 BUTTONS ===== */
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      margin: 28px 0 10px;
     }
-    #reading-list a {
-      color: black;
-      text-decoration: none; /* Remove underlines */
+
+    .buttons img {
+      width: 88px;
+      height: 31px;
+      border: 0;
+      image-rendering: pixelated;
     }
-	
-	#reading-list a:hover {
-      color: blue;
+
+    /* ===== FOOTER ===== */
+    .login {
+      text-align: right;
+      font-size: 0.8em;
+      margin: 14px 0 0;
     }
-    #more-btn {
-      border: none; /* Remove border */
-      background: none; /* Remove background */
-      color: #333; /* Change color to match links */
-      cursor: pointer;
-    }
-	
-	#more-btn:hover{
-      color:blue;
-    }
-	
-	.link:hover{
-    text-decoration: underline;
-	
-	}
-	#socials a:hover{
-	    text-decoration: underline;
 
-	}
-	.ee{
-		color:grey;
-		font-family: 'Trebuchet MS', sans-serif;
-		font-size: 30px;
-	}
-	
-.featured {
-  max-width: 500px; /* Adjust as needed */
-  margin: 0 auto;
-  
-}
-
-.featured .responsive-iframe {
-  width: 100%;
-  
-}
-
-.contact-form {
-  max-width: 500px;
-  margin: 80px auto;
-  padding: 30px;
-  border: 1px solid #333;
-  
-}
-
-.contact-form h2 {
-  font-weight: normal;
-  letter-spacing: 2px;
-  margin-bottom: 20px;
-}
-
-.contact-form input,
-.contact-form textarea {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #333;
-}
-
-.contact-form input:focus,
-.contact-form textarea:focus {
-  outline: none;
-  border-color: #888;
-}
-
-.contact-form button {
-  width: 100%;
-  padding: 10px;
-  background: transparent;
-  border: 1px solid #888;
-
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.contact-form button:hover {
-  background: brown;
-  color: white;
-}
-
-	  .buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.buttons img {
-  image-rendering: pixelated; /* keeps pixel art crisp */
-  border: 0;
-}
-	  
-</style>
-
-	
+    .content-container .login a { color: #877360; }
+    .content-container .login a:hover { color: #CC0000; }
+  </style>
 </head>
+
 <body>
   <div class="container">
-   <div id="site-header"></div>
-   <script src="header.js"></script>
-	 
+
+    <div id="site-header"></div>
+    <script src="header.js"></script>
+
     <div class="content-container">
-      <div class="navigation">
-		<p style="font-family: Courier New;"><b>EGON.TD</b> is a website made to escape the algorithm-driven modern web. Forage around and find interesting stuffs
-		</p>
-		  
-		<t>_________________</t><br><br>
-		<a class="link" href="works.html" style="color: black;">works</a><br>
-        <a class="link" href="https://egontd.blogspot.com/" style="color: black">commonplace</a><br>
-		<a class="link" href="book.html" style="color: black">ole-mole reading and media</a><br>
-		<a class="link" href="ramblings.html" style="color: black">ramblings</a><br>
-		<a class="link" href="gallery.html" style="color: black">gallery</a><br>
-		<t>_________________</t><br><br>
 
-		<div>
-    <a class="link" href="https://podcastaddict.com/podcast/the-lord-of-spirits/4094873" style="color: black">lord of spirits</a><br>
-    <a class="link" href="https://egontd.dropmark.com/" style="color: black;">SEELE-OK</a><br>
-    <a class="link" href="https://www.usaone.net/games/cardGame.asp" style="color: black">draw poker</a><br>
-    <a class="link" href="WEB.HTML" style="color: black">web</a><br>
-	<a class="link" href="wiby.html" style="color: black">WEB 1.0</a><br>
-</div>
-		  
-      </div>
-	  <br>
-      <h4>fav digital media list</h4>
-      <ul id="reading-list">        
+      <p class="intro">
+        <b>EGON.TD</b> is a website made to escape the algorithm-driven modern web.
+        Forage around and find interesting stuffs.
+      </p>
 
+      <hr>
+
+      <ul>
+        <li><a href="works.html">works</a></li>
+        <li><a href="https://egontd.blogspot.com/">commonplace</a></li>
+        <li><a href="book.html">ole-mole reading and media</a></li>
+        <li><a href="ramblings.html">ramblings</a></li>
+        <li><a href="gallery.html">gallery</a></li>
+      </ul>
+
+      <hr>
+
+      <ul>
+        <li><a href="https://podcastaddict.com/podcast/the-lord-of-spirits/4094873">lord of spirits</a></li>
+        <li><a href="https://egontd.dropmark.com/">SEELE-OK</a></li>
+        <li><a href="https://www.usaone.net/games/cardGame.asp">draw poker</a></li>
+        <li><a href="WEB.HTML">web</a></li>
+        <li><a href="wiby.html">WEB 1.0</a></li>
+      </ul>
+
+      <h3>fav digital media list</h3>
+      <ul>
         <li><a href="https://www.youtube.com/watch?v=qEUwUP69pGc">a gentle introduction to Ray Peat</a></li>
         <li><a href="https://www.bibliotecapleyades.net/tierra_hueca/esp_tierra_hueca_2d.htm?utm_source=pocket_reader">The Inner Earth : My Secret Diary : Admiral Richard B. Byrd's Diary (February-March 1947)</a></li>
         <li><a href="https://en.wikipedia.org/wiki/Kumari_Kandam">Kumari Kandam</a></li>
-	<li><a href="https://www.ecocenter.org/our-work/healthy-stuff-lab/reports/receipt-deceit-toxic-chemicals-receipt-paper">Receipts and Endocrine disruptors</a></li>
-	<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10764522/">the caste system</a></li>
-		
+        <li><a href="https://www.ecocenter.org/our-work/healthy-stuff-lab/reports/receipt-deceit-toxic-chemicals-receipt-paper">Receipts and Endocrine disruptors</a></li>
+        <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10764522/">the caste system</a></li>
       </ul>
-      <a href="new_expanded_page.html" class="more"><button id="more-btn">More</button></a>
-	  
-      <h4>digital footprints</h4>
-      <ul id="socials">
+      <p class="more">[ <a href="new_expanded_page.html">more</a> ]</p>
 
-
-		<li><a class="link" href="https://twitter.com/qsebt">X</a></li>
-		<li><a class="link" href="https://www.are.na/egon-t/channels">are.na</a></li>
-		<li><a class="link" href="https://www.instagram.com/kucio40/">instagram</a></li>  
-        <li><a class="link" href="http://inside.volleycountry.com/core/user/68330-k-kloz/">insidevolleycountry</a></li>
-		<li><a class="link" href="https://kiwifarms.net/members/rivale.82597/">kiwi</a></li>  
-
-       
+      <h3>digital footprints</h3>
+      <ul>
+        <li><a href="https://twitter.com/qsebt">X</a></li>
+        <li><a href="https://www.are.na/egon-t/channels">are.na</a></li>
+        <li><a href="https://www.instagram.com/kucio40/">instagram</a></li>
+        <li><a href="http://inside.volleycountry.com/core/user/68330-k-kloz/">insidevolleycountry</a></li>
+        <li><a href="https://kiwifarms.net/members/rivale.82597/">kiwi</a></li>
       </ul>
-	  
-      <br>
+
       <div class="featured">
-        <p class="ee"> the better kpop </p>
+        <h3>the better kpop</h3>
         <div class="video-container">
-          <iframe class="responsive-iframe" width="600" height="345" src="https://www.youtube.com/embed/qhXrye7zkwY"></iframe>
+          <iframe title="the better kpop" src="https://www.youtube.com/embed/qhXrye7zkwY" allowfullscreen></iframe>
         </div>
-		  
-
-		
-		<br>
-		<div class="buttons">
-  <a href="https://raypeat.com/"><img src="RAYPEAT.gif" width="88" height="31" alt="RayPeat"></a>
-  <a href="https://example.org"><img src="shopparks.gif" width="88" height="31" alt="volley"></a>
-  <a href="https://example.net"><img src="chesslinks.gif" width="88" height="31" alt="Chess"></a>
-  <a href="https://example.net"><img src="tintin.gif" width="88" height="31" alt="TINTIN"></a>
-  <a href="https://wiby.me/"><img src="wiby.gif" width="88" height="31" alt="wiby"></a>
-  <a href="guestbook.html"><img src="viewguestbook.gif" width="88" height="31" alt="guestbook"></a>
-</div>  
-		  
-
-
       </div>
-		<a class="link" href="login.html" style="color:white">login</a><br><br>
+
+      <div class="buttons">
+        <a href="https://raypeat.com/"><img src="RAYPEAT.gif" width="88" height="31" alt="RayPeat"></a>
+        <a href="https://example.org"><img src="shopparks.gif" width="88" height="31" alt="volley"></a>
+        <a href="https://example.net"><img src="chesss.gif" width="88" height="31" alt="Chess"></a>
+        <a href="https://example.net"><img src="tintin.gif" width="88" height="31" alt="TINTIN"></a>
+        <a href="https://wiby.me/"><img src="wiby.gif" width="88" height="31" alt="wiby"></a>
+        <a href="guestbook.html"><img src="viewguestbook.gif" width="88" height="31" alt="guestbook"></a>
+      </div>
+
+      <p class="login"><a href="login.html">login</a></p>
 
     </div>
   </div>
-	
-</div>
-
-    
 </body>
 </html>
-
-
-
 
