@@ -20,21 +20,6 @@
       margin: 0 auto;
     }
 
-     .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 4px;
-      margin: 28px 0 10px;
-    }
-
-    .buttons img {
-      width: 88px;
-      height: 31px;
-      border: 0;
-      image-rendering: pixelated;
-    }
-
     /* ===== HEADER (header.js uses these classes) ===== */
     #header {
       background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
@@ -65,18 +50,36 @@
       text-align: left;
     }
 
-    /* ===== LINKS ===== */
-    .link-row {
+    /* ===== POSTS ===== */
+    .post {
+      margin-bottom: 8px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #444;
+      scroll-margin-top: 20px;
+    }
+
+    .post:last-child {
+      border-bottom: 0;
+    }
+
+    .post-title {
+      margin: 18px 0 4px;
+      font-size: 1.4em;
+      font-weight: normal;
+      color: #FFF073;
+    }
+
+    .post-date {
+      font-family: "Courier New", monospace;
+      font-size: 0.8em;
+      color: grey;
       margin-bottom: 12px;
     }
 
-    .link-row a {
-      color: white;
-      text-decoration: none;
-    }
-
-    .link-row a:hover {
-      text-decoration: underline;
+    .post-text {
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     #status {
@@ -90,13 +93,13 @@
       margin-bottom: 18px;
     }
 
-    #admin-panel input {
+    #admin-panel input,
+    #admin-panel textarea {
       display: block;
       width: 100%;
-      max-width: 500px;
       box-sizing: border-box;
       margin-bottom: 8px;
-      padding: 6px 8px;
+      padding: 8px 10px;
       font-family: "Times New Roman", Times, serif;
       font-size: 1em;
       color: white;
@@ -104,14 +107,29 @@
       border: 1px solid grey;
     }
 
-    #admin-panel input:focus {
+    #admin-panel textarea {
+      min-height: 200px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    #admin-panel input:focus,
+    #admin-panel textarea:focus {
       outline: none;
       border-color: white;
     }
 
+    #edit-note {
+      display: none;
+      font-family: "Courier New", monospace;
+      font-size: 0.85em;
+      color: #FFF073;
+      margin-bottom: 8px;
+    }
+
     button {
       margin: 4px 6px 0 0;
-      padding: 4px 10px;
+      padding: 4px 12px;
       font-family: "Times New Roman", Times, serif;
       background: transparent;
       color: white;
@@ -141,20 +159,18 @@
 
     <div class="content-container">
 
-       <div class="buttons">
-        <a href="https://raypeat.com/"><img src="discord2.gif" width="88" height="31" alt="discord"></a>
-  
-      </div>
       <!-- ADMIN PANEL (only shown when you are signed in) -->
       <div id="admin-panel" style="display:none;">
-        <input type="text" id="linkLabel" placeholder="Label (e.g. VBLineup)">
-        <input type="text" id="linkUrl" placeholder="URL (https://...)">
-        <button onclick="addLink()">Add Link</button>
+        <div id="edit-note">editing a post</div>
+        <input type="text" id="postTitle" placeholder="Title">
+        <textarea id="postText" placeholder="Write your post..."></textarea>
+        <button id="saveBtn" onclick="savePost()">Publish</button>
+        <button id="cancelBtn" onclick="cancelEdit()" style="display:none;">Cancel</button>
         <hr>
       </div>
 
       <div id="status"></div>
-      <div id="links"></div>
+      <div id="posts"></div>
 
     </div>
 
@@ -195,23 +211,22 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const col = collection(db, "links");
+const col = collection(db, "posts");
 
 let isAdmin = false;
+let editingId = null;
 
-/* only allow normal web links (blocks things like javascript:) */
-function cleanUrl(raw) {
-  let u = (raw || "").trim();
-  if (!u) return null;
-  if (!/^https?:\/\//i.test(u)) u = "https://" + u;
-  try {
-    const parsed = new URL(u);
-    return (parsed.protocol === "http:" || parsed.protocol === "https:")
-      ? parsed.href
-      : null;
-  } catch {
-    return null;
-  }
+const titleInput = document.getElementById("postTitle");
+const textInput = document.getElementById("postText");
+const saveBtn = document.getElementById("saveBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+const editNote = document.getElementById("edit-note");
+
+/* switch the form between "new post" and "editing a post" */
+function setEditMode(on) {
+  saveBtn.textContent = on ? "Save changes" : "Publish";
+  cancelBtn.style.display = on ? "inline-block" : "none";
+  editNote.style.display = on ? "block" : "none";
 }
 
 /* AUTH CHECK */
@@ -224,44 +239,49 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("admin-panel").style.display = "none";
   }
 
-  await loadLinks();
+  await loadPosts();
 });
 
-/* ADD */
-window.addLink = async function () {
+/* PUBLISH (new post) or SAVE (editing) */
+window.savePost = async function () {
   if (!isAdmin) return;
 
-  const label = document.getElementById("linkLabel").value.trim();
-  const url = cleanUrl(document.getElementById("linkUrl").value);
+  const title = titleInput.value.trim();
+  const text = textInput.value.trim();
 
-  if (!label) return;
-
-  if (!url) {
-    alert("That doesn't look like a valid web address.");
-    return;
-  }
+  if (!title || !text) return;
 
   try {
-    await addDoc(col, {
-      label,
-      url,
-      date: new Date().toISOString()
-    });
+    if (editingId) {
+      await updateDoc(doc(db, "posts", editingId), { title, text });
+    } else {
+      await addDoc(col, {
+        title,
+        text,
+        date: new Date().toISOString()
+      });
+    }
   } catch (err) {
     console.error(err);
     alert("Couldn't save. Check the console (F12) for the reason.");
     return;
   }
 
-  document.getElementById("linkLabel").value = "";
-  document.getElementById("linkUrl").value = "";
+  window.cancelEdit();
+  await loadPosts();
+};
 
-  await loadLinks();
+/* CANCEL / RESET FORM */
+window.cancelEdit = function () {
+  editingId = null;
+  titleInput.value = "";
+  textInput.value = "";
+  setEditMode(false);
 };
 
 /* LOAD */
-async function loadLinks() {
-  const container = document.getElementById("links");
+async function loadPosts() {
+  const container = document.getElementById("posts");
   const status = document.getElementById("status");
 
   container.innerHTML = "";
@@ -272,100 +292,87 @@ async function loadLinks() {
     snapshot = await getDocs(query(col, orderBy("date", "desc")));
   } catch (err) {
     console.error(err);
-    status.textContent = "couldn't load links.";
+    status.textContent = "couldn't load posts.";
     return;
   }
 
   if (snapshot.empty) {
-    status.textContent = "no links yet.";
+    status.textContent = "no posts yet.";
     return;
   }
 
   snapshot.forEach((d) => {
-    const item = d.data();
+    const p = d.data();
     const id = d.id;
 
-    const row = document.createElement("div");
-    row.className = "link-row";
+    const post = document.createElement("div");
+    post.className = "post";
+    post.id = `post-${id}`;
 
-    /* text is inserted as plain text, so nothing typed can run as code */
-    const safeUrl = cleanUrl(item.url);
-    const a = document.createElement("a");
-    a.textContent = item.label;
-    if (safeUrl) {
-      a.href = safeUrl;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-    }
-    row.appendChild(a);
+    /* everything is inserted as plain text, so nothing typed can run as code */
+    const h2 = document.createElement("h2");
+    h2.className = "post-title";
+    h2.textContent = p.title;
+
+    const date = document.createElement("div");
+    date.className = "post-date";
+    date.textContent = new Date(p.date).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+
+    const text = document.createElement("div");
+    text.className = "post-text";
+    text.textContent = p.text;
+
+    post.appendChild(h2);
+    post.appendChild(date);
+    post.appendChild(text);
 
     /* ADMIN BUTTONS */
     if (isAdmin) {
-      row.appendChild(document.createElement("br"));
-
       const editBtn = document.createElement("button");
       editBtn.textContent = "Edit";
-      editBtn.onclick = () => editLink(id, item.label, item.url);
+      editBtn.onclick = () => {
+        editingId = id;
+        titleInput.value = p.title;
+        textInput.value = p.text;
+        setEditMode(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        textInput.focus();
+      };
 
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = () => deleteLink(id);
+      deleteBtn.onclick = () => deletePost(id);
 
-      row.appendChild(editBtn);
-      row.appendChild(deleteBtn);
+      post.appendChild(editBtn);
+      post.appendChild(deleteBtn);
     }
 
-    container.appendChild(row);
+    container.appendChild(post);
   });
 }
 
-/* EDIT */
-window.editLink = async function (id, currentLabel, currentUrl) {
-  if (!isAdmin) return;
-
-  const newLabel = prompt("Label:", currentLabel);
-  if (newLabel === null) return;
-
-  const newUrlRaw = prompt("URL:", currentUrl);
-  if (newUrlRaw === null) return;
-
-  const newUrl = cleanUrl(newUrlRaw);
-
-  if (!newLabel.trim() || !newUrl) {
-    alert("Label and a valid web address are both required.");
-    return;
-  }
-
-  try {
-    await updateDoc(doc(db, "links", id), {
-      label: newLabel.trim(),
-      url: newUrl
-    });
-  } catch (err) {
-    console.error(err);
-    alert("Couldn't save. Check the console (F12) for the reason.");
-    return;
-  }
-
-  await loadLinks();
-};
-
 /* DELETE */
-window.deleteLink = async function (id) {
+async function deletePost(id) {
   if (!isAdmin) return;
 
-  if (!confirm("Delete this link?")) return;
+  if (!confirm("Delete this post?")) return;
 
   try {
-    await deleteDoc(doc(db, "links", id));
+    await deleteDoc(doc(db, "posts", id));
   } catch (err) {
     console.error(err);
     alert("Couldn't delete. Check the console (F12) for the reason.");
     return;
   }
 
-  await loadLinks();
-};
+  if (editingId === id) window.cancelEdit();
+
+  await loadPosts();
+}
 </script>
 
 </body>
