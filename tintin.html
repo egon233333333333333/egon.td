@@ -101,7 +101,7 @@
       gap: 16px;
     }
 
-    /* each box = one book, and the whole box is a link */
+    /* each box = one book, and the whole box is a link to its PDF */
     .content-container a.book {
       display: block;
       aspect-ratio: 3 / 4;
@@ -125,8 +125,8 @@
       object-fit: cover;
     }
 
-    /* ===== POP-UP VIEWER ===== */
-    #lightbox {
+    /* ===== PDF VIEWER (dark overlay) ===== */
+    #viewer {
       display: none;
       position: fixed;
       inset: 0;
@@ -134,26 +134,75 @@
       z-index: 10;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      cursor: pointer;
       padding: 16px;
       box-sizing: border-box;
     }
 
-    #lightbox.open { display: flex; }
+    #viewer.open { display: flex; }
 
-    #lightbox img {
-      max-width: 100%;
-      max-height: 85vh;
+    .viewer-panel {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 900px;
+      height: 100%;
+      background: #EBE4E4;
       border: 3px ridge #5A3825;
-      background: #fff;
     }
 
-    #lightbox p {
+    .viewer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 10px;
+      background: #5A3825;
       color: #F5E9C8;
       font-family: "Courier New", monospace;
-      margin: 10px 0 0;
-      text-align: center;
+      font-size: 0.9em;
+    }
+
+    .viewer-bar span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .viewer-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .viewer-bar a {
+      color: #FFF073;
+    }
+
+    .viewer-bar a:hover {
+      color: #fff;
+    }
+
+    .viewer-bar button {
+      font-family: inherit;
+      font-size: inherit;
+      background: transparent;
+      color: #F5E9C8;
+      border: 1px solid #F5E9C8;
+      padding: 2px 10px;
+      cursor: pointer;
+    }
+
+    .viewer-bar button:hover {
+      background: brown;
+      color: #fff;
+    }
+
+    #viewer-frame {
+      flex: 1;
+      width: 100%;
+      border: 0;
+      background: #fff;
     }
 
     @media (max-width: 640px) {
@@ -180,64 +229,92 @@
       <hr>
 
       <!--
-        HOW TO ADD A COVER
-        1. Put the image in a folder called "tintin" (e.g. tintin/01.jpg)
-        2. Each box below already points to tintin/01.jpg ... tintin/10.jpg
-        3. Change title="" to the book's name. It shows in the pop-up.
-        To add another book, copy one <a> line and change the file name.
-        To link a box to a page instead of the pop-up, change its href
-        (e.g. href="https://en.wikipedia.org/wiki/The_Blue_Lotus") and add
-        target="_blank" and the class "nopop".
+        HOW IT WORKS
+        - Each box shows a cover (the <img>) and opens a PDF (the href).
+        - Put your PDFs in tintin/pdf/ and name them 01.pdf, 02.pdf ... 23.pdf
+          (or change the href on any box to match your file name).
+        - Clicking a cover opens the PDF in the dark overlay.
+        - To add a book, copy one <a> line, change the href, title and img.
+        - To make a box open a normal page instead of the overlay, add class "nopop"
+          (class="book nopop") and add target="_blank".
       -->
 
       <div class="shelf">
 
-        <a class="book" href="tintin/01.jpg" title="Tintin in the Land of the Soviets"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFE-cumxpA2qsbsC7BkhlWfZsdnNpFlCekh-dZooFrD1uETJFE5GeK5uiB&s=10" alt="Tintin in the Land of the Soviets"></a>
-        <a class="book" href="tintin/02.jpg" title="Tintin in the Congo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPEkV1ecWYow-Keg1fpqnXMY6sio3EUw1gzO-tiA7mgC9cTsFL88o6bvQ&s=10" alt="Tintin in the Congo"></a>
-        <a class="book" href="tintin/03.jpg" title="Tintin in America"><img src="https://upload.wikimedia.org/wikipedia/en/9/90/The_Adventures_of_Tintin_-_03_-_Tintin_in_America.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Tintin in America"></a>
-        <a class="book" href="tintin/04.jpg" title="Cigars of the Pharaoh"><img src="https://upload.wikimedia.org/wikipedia/en/0/0a/The_Adventures_of_Tintin_-_04_-_Cigars_of_the_Pharaoh.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Cigars of the Pharaoh"></a>
-        <a class="book" href="tintin/05.jpg" title="The Blue Lotus"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4WXHI8DoCdfFVnYro4rCAgKknHHP66L1i4OQ-kcm8POSisIsiuxnEmi4&s=10" alt="The Blue Lotus"></a>
+        <a class="book" href="tintin/pdf/01.pdf" title="Tintin in the Land of the Soviets"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFE-cumxpA2qsbsC7BkhlWfZsdnNpFlCekh-dZooFrD1uETJFE5GeK5uiB&s=10" alt="Tintin in the Land of the Soviets"></a>
+        <a class="book" href="tintin/pdf/02.pdf" title="Tintin in the Congo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPEkV1ecWYow-Keg1fpqnXMY6sio3EUw1gzO-tiA7mgC9cTsFL88o6bvQ&s=10" alt="Tintin in the Congo"></a>
+        <a class="book" href="tintin/pdf/03.pdf" title="Tintin in America"><img src="https://upload.wikimedia.org/wikipedia/en/9/90/The_Adventures_of_Tintin_-_03_-_Tintin_in_America.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Tintin in America"></a>
+        <a class="book" href="tintin/pdf/04.pdf" title="Cigars of the Pharaoh"><img src="https://upload.wikimedia.org/wikipedia/en/0/0a/The_Adventures_of_Tintin_-_04_-_Cigars_of_the_Pharaoh.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Cigars of the Pharaoh"></a>
+        <a class="book" href="tintin/pdf/05.pdf" title="The Blue Lotus"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4WXHI8DoCdfFVnYro4rCAgKknHHP66L1i4OQ-kcm8POSisIsiuxnEmi4&s=10" alt="The Blue Lotus"></a>
 
-        <a class="book" href="tintin/06.jpg" title="The Broken Ear"><img src="https://upload.wikimedia.org/wikipedia/en/d/d0/The_Adventures_of_Tintin_-_06_-_The_Broken_Ear.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Broken Ear"></a>
-        <a class="book" href="tintin/07.jpg" title="The Black Island"><img src="https://upload.wikimedia.org/wikipedia/en/9/94/The_Adventures_of_Tintin_-_07_-_The_Black_Island.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Black Island"></a>
-        <a class="book" href="tintin/08.jpg" title="King Ottokar's Sceptre"><img src="https://upload.wikimedia.org/wikipedia/en/9/9c/The_Adventures_of_Tintin_-_08_-_King_Ottokar%27s_Sceptre.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="King Ottokar's Sceptre"></a>
-        <a class="book" href="tintin/09.jpg" title="The Crab with the Golden Claws"><img src="https://upload.wikimedia.org/wikipedia/en/0/0a/The_Adventures_of_Tintin_-_09_-_The_Crab_with_the_Golden_Claws.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Crab with the Golden Claws"></a>
-        <a class="book" href="tintin/10.jpg" title="The Shooting Star"><img src="https://upload.wikimedia.org/wikipedia/en/d/da/The_Adventures_of_Tintin_-_10_-_The_Shooting_Star.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Shooting Star"></a>
+        <a class="book" href="tintin/pdf/06.pdf" title="The Broken Ear"><img src="https://upload.wikimedia.org/wikipedia/en/d/d0/The_Adventures_of_Tintin_-_06_-_The_Broken_Ear.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Broken Ear"></a>
+        <a class="book" href="tintin/pdf/07.pdf" title="The Black Island"><img src="https://upload.wikimedia.org/wikipedia/en/9/94/The_Adventures_of_Tintin_-_07_-_The_Black_Island.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Black Island"></a>
+        <a class="book" href="tintin/pdf/08.pdf" title="King Ottokar's Sceptre"><img src="https://upload.wikimedia.org/wikipedia/en/9/9c/The_Adventures_of_Tintin_-_08_-_King_Ottokar%27s_Sceptre.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="King Ottokar's Sceptre"></a>
+        <a class="book" href="tintin/pdf/09.pdf" title="The Crab with the Golden Claws"><img src="https://upload.wikimedia.org/wikipedia/en/0/0a/The_Adventures_of_Tintin_-_09_-_The_Crab_with_the_Golden_Claws.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Crab with the Golden Claws"></a>
+        <a class="book" href="tintin/pdf/10.pdf" title="The Shooting Star"><img src="https://upload.wikimedia.org/wikipedia/en/d/da/The_Adventures_of_Tintin_-_10_-_The_Shooting_Star.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Shooting Star"></a>
 
-        <a class="book" href="tintin/06.jpg" title="The Broken Ear"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmw_7D-rR0l07VGm8LgaIkVQ-ih3K6Ire758I_HBNrbWMrhjXdVCMozro&s=10" alt="The Broken Ear"></a>
-        <a class="book" href="tintin/07.jpg" title="The Black Island"><img src="https://upload.wikimedia.org/wikipedia/en/b/ba/The_Adventures_of_Tintin_-_12_-_Red_Rackham%27s_Treasure.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Black Island"></a>
-        <a class="book" href="tintin/08.jpg" title="King Ottokar's Sceptre"><img src="https://m.media-amazon.com/images/I/71TkrFEowNL._AC_UF1000,1000_QL80_.jpg" alt="King Ottokar's Sceptre"></a>
-        <a class="book" href="tintin/09.jpg" title="The Crab with the Golden Claws"><img src="https://thumb.wikimedia.org/wikipedia/en/thumb/e/ee/The_Adventures_of_Tintin_-_14_-_Prisoners_of_the_Sun.jpg/250px-The_Adventures_of_Tintin_-_14_-_Prisoners_of_the_Sun.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail" alt="The Crab with the Golden Claws"></a>
-        <a class="book" href="tintin/10.jpg" title="The Shooting Star"><img src="https://upload.wikimedia.org/wikipedia/en/7/7c/The_Adventures_of_Tintin_-_15_-_Land_of_Black_Gold.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Shooting Star"></a>
+        <a class="book" href="tintin/pdf/11.pdf" title="The Secret of the Unicorn"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmw_7D-rR0l07VGm8LgaIkVQ-ih3K6Ire758I_HBNrbWMrhjXdVCMozro&s=10" alt="The Secret of the Unicorn"></a>
+        <a class="book" href="tintin/pdf/12.pdf" title="Red Rackham's Treasure"><img src="https://upload.wikimedia.org/wikipedia/en/b/ba/The_Adventures_of_Tintin_-_12_-_Red_Rackham%27s_Treasure.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Red Rackham's Treasure"></a>
+        <a class="book" href="tintin/pdf/13.pdf" title="The Seven Crystal Balls"><img src="https://m.media-amazon.com/images/I/71TkrFEowNL._AC_UF1000,1000_QL80_.jpg" alt="The Seven Crystal Balls"></a>
+        <a class="book" href="tintin/pdf/14.pdf" title="Prisoners of the Sun"><img src="https://thumb.wikimedia.org/wikipedia/en/thumb/e/ee/The_Adventures_of_Tintin_-_14_-_Prisoners_of_the_Sun.jpg/250px-The_Adventures_of_Tintin_-_14_-_Prisoners_of_the_Sun.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail" alt="Prisoners of the Sun"></a>
+        <a class="book" href="tintin/pdf/15.pdf" title="Land of Black Gold"><img src="https://upload.wikimedia.org/wikipedia/en/7/7c/The_Adventures_of_Tintin_-_15_-_Land_of_Black_Gold.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Land of Black Gold"></a>
 
-        <a class="book" href="tintin/06.jpg" title="The Broken Ear"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJ_6rItPISVaimq3176n_vKDKdsqz4ge5fSmPtzQBHV_qslOdH1mcXRRE&s=10" alt="The Broken Ear"></a>
-        <a class="book" href="tintin/07.jpg" title="The Black Island"><img src="https://upload.wikimedia.org/wikipedia/en/7/7c/The_Adventures_of_Tintin_-_17_-_Explorers_on_the_Moon.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Black Island"></a>
-        <a class="book" href="tintin/08.jpg" title="King Ottokar's Sceptre"><img src="https://upload.wikimedia.org/wikipedia/en/7/7d/The_Adventures_of_Tintin_-_18_-_The_Calculus_Affair.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="King Ottokar's Sceptre"></a>
-        <a class="book" href="tintin/09.jpg" title="The Crab with the Golden Claws"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWcEfN-cz-scfJqzil3wHG-OJXYZp_EO3NvlXjbDnmiVjbtYxWDkYrYA2W&s=10" alt="The Crab with the Golden Claws"></a>
-        <a class="book" href="tintin/10.jpg" title="The Shooting Star"><img src="https://upload.wikimedia.org/wikipedia/en/2/25/The_Adventures_of_Tintin_-_20_-_Tintin_in_Tibet.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Shooting Star"></a>
+        <a class="book" href="tintin/pdf/16.pdf" title="Destination Moon"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJ_6rItPISVaimq3176n_vKDKdsqz4ge5fSmPtzQBHV_qslOdH1mcXRRE&s=10" alt="Destination Moon"></a>
+        <a class="book" href="tintin/pdf/17.pdf" title="Explorers on the Moon"><img src="https://upload.wikimedia.org/wikipedia/en/7/7c/The_Adventures_of_Tintin_-_17_-_Explorers_on_the_Moon.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Explorers on the Moon"></a>
+        <a class="book" href="tintin/pdf/18.pdf" title="The Calculus Affair"><img src="https://upload.wikimedia.org/wikipedia/en/7/7d/The_Adventures_of_Tintin_-_18_-_The_Calculus_Affair.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="The Calculus Affair"></a>
+        <a class="book" href="tintin/pdf/19.pdf" title="The Red Sea Sharks"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWcEfN-cz-scfJqzil3wHG-OJXYZp_EO3NvlXjbDnmiVjbtYxWDkYrYA2W&s=10" alt="The Red Sea Sharks"></a>
+        <a class="book" href="tintin/pdf/20.pdf" title="Tintin in Tibet"><img src="https://upload.wikimedia.org/wikipedia/en/2/25/The_Adventures_of_Tintin_-_20_-_Tintin_in_Tibet.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Tintin in Tibet"></a>
 
-        <a class="book" href="tintin/06.jpg" title="The Broken Ear"><img src="https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1344267271i/146106.jpg" alt="The Broken Ear"></a>
-        <a class="book" href="tintin/07.jpg" title="The Black Island"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkNjswogppSAFf0sm1tus13zfxIWZZj0AI7CrC3_8itg&s=10" alt="The Black Island"></a>
-        <a class="book" href="tintin/08.jpg" title="King Ottokar's Sceptre"><img src="https://upload.wikimedia.org/wikipedia/en/0/0c/The_Adventures_of_Tintin_-_23_-_Tintin_and_the_Picaros.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="King Ottokar's Sceptre"></a>
-  
-  
+        <a class="book" href="tintin/pdf/21.pdf" title="The Castafiore Emerald"><img src="https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1344267271i/146106.jpg" alt="The Castafiore Emerald"></a>
+        <a class="book" href="tintin/pdf/22.pdf" title="Flight 714 to Sydney"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkNjswogppSAFf0sm1tus13zfxIWZZj0AI7CrC3_8itg&s=10" alt="Flight 714 to Sydney"></a>
+        <a class="book" href="tintin/pdf/23.pdf" title="Tintin and the Picaros"><img src="https://upload.wikimedia.org/wikipedia/en/0/0c/The_Adventures_of_Tintin_-_23_-_Tintin_and_the_Picaros.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Tintin and the Picaros"></a>
+
       </div>
 
     </div>
   </div>
 
-  <!-- pop-up viewer: click a cover to enlarge, click anywhere or press Esc to close -->
-  <div id="lightbox" role="dialog" aria-label="Book cover">
-    <img id="lightbox-img" src="" alt="">
-    <p id="lightbox-caption"></p>
+  <!-- PDF viewer: click outside the page, press Esc, or use the close button to leave -->
+  <div id="viewer" role="dialog" aria-label="Comic viewer">
+    <div class="viewer-panel">
+      <div class="viewer-bar">
+        <span id="viewer-title"></span>
+        <div class="viewer-links">
+          <a id="viewer-open" href="#" target="_blank" rel="noopener">open in new tab</a>
+          <button type="button" id="viewer-close">close &#10005;</button>
+        </div>
+      </div>
+      <iframe id="viewer-frame" title="Comic PDF" src="about:blank"></iframe>
+    </div>
   </div>
 
   <script>
-    const box = document.getElementById("lightbox");
-    const bigImg = document.getElementById("lightbox-img");
-    const caption = document.getElementById("lightbox-caption");
+    const viewer = document.getElementById("viewer");
+    const frame = document.getElementById("viewer-frame");
+    const viewerTitle = document.getElementById("viewer-title");
+    const viewerOpen = document.getElementById("viewer-open");
 
-    // hide the broken-image icon so an empty slot stays a plain white box
+    // phones/tablets and some browsers can't show a PDF inside a page,
+    // so for them the cover opens the PDF in a new tab instead
+    const canEmbedPdf =
+      navigator.pdfViewerEnabled !== false &&
+      !window.matchMedia("(pointer: coarse)").matches;
+
+    function openViewer(url, title) {
+      frame.src = url + "#view=FitH";
+      viewerTitle.textContent = title;
+      viewerOpen.href = url;
+      viewer.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeViewer() {
+      viewer.classList.remove("open");
+      frame.src = "about:blank";
+      document.body.style.overflow = "";
+    }
+
+    // hide the broken-image icon so a missing cover stays a plain white box
     document.querySelectorAll(".book img").forEach((img) => {
       img.addEventListener("error", () => { img.style.visibility = "hidden"; });
     });
@@ -247,19 +324,23 @@
         if (link.classList.contains("nopop")) return;   // normal link
         e.preventDefault();
 
-        const thumb = link.querySelector("img");
-        if (!thumb.complete || thumb.naturalWidth === 0) return;  // no cover yet
-
-        bigImg.src = link.href;
-        bigImg.alt = thumb.alt;
-        caption.textContent = link.title;
-        box.classList.add("open");
+        if (!canEmbedPdf) {
+          window.open(link.href, "_blank");
+          return;
+        }
+        openViewer(link.getAttribute("href"), link.title);
       });
     });
 
-    box.addEventListener("click", () => box.classList.remove("open"));
+    document.getElementById("viewer-close").addEventListener("click", closeViewer);
+
+    // clicking the dark area around the page closes it
+    viewer.addEventListener("click", (e) => {
+      if (e.target === viewer) closeViewer();
+    });
+
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") box.classList.remove("open");
+      if (e.key === "Escape" && viewer.classList.contains("open")) closeViewer();
     });
   </script>
 </body>
