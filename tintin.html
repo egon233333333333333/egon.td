@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/jpeg">
+  <title>egon.td | tintin</title>
+
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 16px;
+      line-height: 1.4;
+      background-color: #877360;
+      margin: 0;
+      padding: 0 8px 30px;
+      color: #000;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ===== HEADER (header.js uses these classes) ===== */
+    #header {
+      background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header-s {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .header-s a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .header-s a:hover {
+      color: #FFF073;
+      text-decoration: underline;
+    }
+
+    .title a {
+      color: #FFF073;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .subtitle a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    /* ===== MAIN BOX ===== */
+    .content-container {
+      border: 3px ridge #5A3825;
+      background-color: #EBE4E4;
+      padding: 20px 24px 28px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .content-container a:link    { color: #0000EE; text-decoration: underline; }
+    .content-container a:visited { color: #551A8B; }
+    .content-container a:hover   { color: #CC0000; }
+
+    h1 {
+      color: #5A3825;
+      font-size: 30px;
+      font-weight: normal;
+      margin: 14px 0 6px;
+    }
+
+    .back {
+      font-family: "Courier New", monospace;
+      font-size: 0.85em;
+      margin: 0;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #5A3825;
+      margin: 16px 0 22px;
+    }
+
+    /* ===== BOOK GRID: 5 per row ===== */
+    .shelf {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    /* each box = one book, and the whole box is a link */
+    .content-container a.book {
+      display: block;
+      aspect-ratio: 3 / 4;
+      background: #fff;
+      border: 3px solid #000;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    .content-container a.book:hover,
+    .content-container a.book:focus-visible {
+      border-color: #5A3825;
+      box-shadow: 4px 4px 0 #877360;
+      outline: none;
+    }
+
+    .book img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ===== POP-UP VIEWER ===== */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    #lightbox.open { display: flex; }
+
+    #lightbox img {
+      max-width: 100%;
+      max-height: 85vh;
+      border: 3px ridge #5A3825;
+      background: #fff;
+    }
+
+    #lightbox p {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      margin: 10px 0 0;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .shelf { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    }
+
+    @media (max-width: 400px) {
+      .shelf { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div id="site-header"></div>
+    <script src="header.js"></script>
+
+    <div class="content-container">
+
+      <p class="back"><a href="index.html">&larr; back to home</a></p>
+
+      <h1>tintin</h1>
+      <hr>
+
+      <!--
+        HOW TO ADD A COVER
+        1. Put the image in a folder called "tintin" (e.g. tintin/01.jpg)
+        2. Each box below already points to tintin/01.jpg ... tintin/10.jpg
+        3. Change title="" to the book's name. It shows in the pop-up.
+        To add another book, copy one <a> line and change the file name.
+        To link a box to a page instead of the pop-up, change its href
+        (e.g. href="https://en.wikipedia.org/wiki/The_Blue_Lotus") and add
+        target="_blank" and the class "nopop".
+      -->
+
+      <div class="shelf">
+
+        <a class="book" href="tintin/01.jpg" title="Tintin in the Land of the Soviets"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFE-cumxpA2qsbsC7BkhlWfZsdnNpFlCekh-dZooFrD1uETJFE5GeK5uiB&s=10" alt="Tintin in the Land of the Soviets"></a>
+        <a class="book" href="tintin/02.jpg" title="Tintin in the Congo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPEkV1ecWYow-Keg1fpqnXMY6sio3EUw1gzO-tiA7mgC9cTsFL88o6bvQ&s=10" alt="Tintin in the Congo"></a>
+        <a class="book" href="tintin/03.jpg" title="Tintin in America"><img src="https://upload.wikimedia.org/wikipedia/en/9/90/The_Adventures_of_Tintin_-_03_-_Tintin_in_America.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Tintin in America"></a>
+        <a class="book" href="tintin/04.jpg" title="Cigars of the Pharaoh"><img src="https://upload.wikimedia.org/wikipedia/en/0/0a/The_Adventures_of_Tintin_-_04_-_Cigars_of_the_Pharaoh.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" alt="Cigars of the Pharaoh"></a>
+        <a class="book" href="tintin/05.jpg" title="The Blue Lotus"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4WXHI8DoCdfFVnYro4rCAgKknHHP66L1i4OQ-kcm8POSisIsiuxnEmi4&s=10" alt="The Blue Lotus"></a>
+
+        <a class="book" href="tintin/06.jpg" title="The Broken Ear"><img src="tintin/06.jpg" alt="The Broken Ear"></a>
+        <a class="book" href="tintin/07.jpg" title="The Black Island"><img src="tintin/07.jpg" alt="The Black Island"></a>
+        <a class="book" href="tintin/08.jpg" title="King Ottokar's Sceptre"><img src="tintin/08.jpg" alt="King Ottokar's Sceptre"></a>
+        <a class="book" href="tintin/09.jpg" title="The Crab with the Golden Claws"><img src="tintin/09.jpg" alt="The Crab with the Golden Claws"></a>
+        <a class="book" href="tintin/10.jpg" title="The Shooting Star"><img src="tintin/10.jpg" alt="The Shooting Star"></a>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- pop-up viewer: click a cover to enlarge, click anywhere or press Esc to close -->
+  <div id="lightbox" role="dialog" aria-label="Book cover">
+    <img id="lightbox-img" src="" alt="">
+    <p id="lightbox-caption"></p>
+  </div>
+
+  <script>
+    const box = document.getElementById("lightbox");
+    const bigImg = document.getElementById("lightbox-img");
+    const caption = document.getElementById("lightbox-caption");
+
+    // hide the broken-image icon so an empty slot stays a plain white box
+    document.querySelectorAll(".book img").forEach((img) => {
+      img.addEventListener("error", () => { img.style.visibility = "hidden"; });
+    });
+
+    document.querySelectorAll("a.book").forEach((link) => {
+      link.addEventListener("click", (e) => {
+        if (link.classList.contains("nopop")) return;   // normal link
+        e.preventDefault();
+
+        const thumb = link.querySelector("img");
+        if (!thumb.complete || thumb.naturalWidth === 0) return;  // no cover yet
+
+        bigImg.src = link.href;
+        bigImg.alt = thumb.alt;
+        caption.textContent = link.title;
+        box.classList.add("open");
+      });
+    });
+
+    box.addEventListener("click", () => box.classList.remove("open"));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") box.classList.remove("open");
+    });
+  </script>
+</body>
+</html>
+
