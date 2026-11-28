@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/jpeg">
+  <title>egon.td | under construction</title>
+
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 16px;
+      line-height: 1.4;
+      background-color: #877360;
+      margin: 0;
+      padding: 0 8px 30px;
+      color: #000;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ===== HEADER (header.js uses these classes) ===== */
+    #header {
+      background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header-s {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .header-s a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .header-s a:hover {
+      color: #FFF073;
+      text-decoration: underline;
+    }
+
+    .title a {
+      color: #FFF073;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .subtitle a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    /* ===== MAIN BOX ===== */
+    .content-container {
+      border: 3px ridge #5A3825;
+      background-color: #EBE4E4;
+      padding: 20px 24px 28px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .content-container a:link    { color: #0000EE; text-decoration: underline; }
+    .content-container a:visited { color: #551A8B; }
+    .content-container a:hover   { color: #CC0000; }
+
+    .stripe {
+      height: 18px;
+      margin: 14px 0;
+      border: 2px solid #000;
+      background: repeating-linear-gradient(
+        -45deg,
+        #FFD400 0,
+        #FFD400 14px,
+        #000 14px,
+        #000 28px
+      );
+    }
+
+    h1 {
+      color: #5A3825;
+      font-size: 30px;
+      font-weight: normal;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 18px 0 6px;
+    }
+
+    .sign {
+      font-size: 56px;
+      line-height: 1;
+      margin: 20px 0 0;
+    }
+
+    .blink {
+      animation: blink 1.2s steps(2, start) infinite;
+    }
+
+    @keyframes blink {
+      to { visibility: hidden; }
+    }
+
+    .note {
+      font-family: "Courier New", monospace;
+      margin: 8px 0 0;
+    }
+
+    .back {
+      font-family: "Courier New", monospace;
+      font-size: 0.9em;
+      margin: 24px 0 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .blink { animation: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div id="site-header"></div>
+    <script src="header.js"></script>
+
+    <div class="content-container">
+
+      <div class="stripe"></div>
+
+      <p class="sign" aria-hidden="true">&#128679;</p>
+      <h1>under construction</h1>
+      <p class="note blink">this page is not ready yet</p>
+      <p class="note">please check back soon.</p>
+
+      <div class="stripe"></div>
+
+      <p class="back"><a href="index.html">&larr; back to home</a></p>
+
+    </div>
+  </div>
+</body>
+</html>
+
