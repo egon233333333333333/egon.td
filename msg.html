@@ -1,25 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>egon.td</title>
+  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/jpeg">
+  <title>egon.td | contact</title>
 
   <style>
-
     body {
-      font-family: Times New Roman, sans-serif;
+      font-family: "Times New Roman", Times, serif;
       background-color: #877360;
       margin: 0;
-      padding: 0;
-      align-content: left;
+      padding: 0 12px 40px;
       color: grey;
-    }
-
-    img {
-      width: 100%;
-      height: auto;
     }
 
     .container {
@@ -43,41 +36,242 @@
 
     .subtitle a {
       color: grey;
-      font-family: Courier New;
+      font-family: "Courier New", monospace;
       text-decoration: none;
     }
 
     .content-container {
-      border: 1px solid #666;
+      border: 1px solid grey;
       background-color: #EBE4E4;
-      padding: 20px;
+      padding: 20px 24px 28px;
       margin-top: 20px;
       text-align: left;
-      border-color: grey;
+      color: #333;
     }
 
+    /* images only shrink to fit; they are no longer stretched to 100% */
+    .content-container img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    a {
+      color: black;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: brown;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      color: #5A3825;
+      font-weight: normal;
+    }
+
+    .intro {
+      margin: 0 0 20px;
+      line-height: 1.5;
+    }
+
+    .back {
+      font-family: "Courier New", monospace;
+      font-size: 0.85em;
+      margin: 0 0 18px;
+    }
+
+    /* ===== FORM ===== */
+    .contact-form {
+      border-top: 1px solid grey;
+      padding-top: 18px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-family: "Courier New", monospace;
+      font-size: 0.85em;
+      color: #5A3825;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 1em;
+      color: #222;
+      background: #f7f3f3;
+      border: 1px solid #333;
+      border-radius: 0;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      background: #fff;
+      border-color: brown;
+      box-shadow: 3px 3px 0 rgba(135, 115, 96, 0.5);
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
+
+    button {
+      padding: 8px 22px;
+      font-family: "Courier New", monospace;
+      font-size: 0.95em;
+      background: transparent;
+      color: black;
+      border: 1px solid #333;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      background: brown;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    /* hidden spam trap, real people never see or fill this */
+    .hp {
+      position: absolute;
+      left: -9999px;
+      height: 0;
+      overflow: hidden;
+    }
+
+    #form-status {
+      margin-top: 14px;
+      font-family: "Courier New", monospace;
+      font-size: 0.9em;
+      min-height: 1.2em;
+    }
+
+    #form-status.ok { color: #2f6b2f; }
+    #form-status.err { color: #a02020; }
+
+    /* ===== 88x31 BUTTONS (optional) ===== */
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid grey;
+    }
+
+    .buttons img {
+      width: 88px;
+      height: 31px;
+      image-rendering: pixelated;
+      border: 0;
+    }
   </style>
 </head>
 
 <body>
 
-<div class="contact-form">
-<!-- FORM MADE FROM FORMSPREE -->
-  <p class="ee"> Send me a message </p> 
-	
-	 <form action="https://formspree.io/f/mnjwjlzw" method="POST">
-	  <label>Enter your name:</label><br>
-	  <input type="text" name="name" required><br><br>
-	
-	  <label>Email:</label><br>
-	  <input type="email" name="email" required><br><br>
-	
-	  <label>Message:</label><br>
-	  <textarea name="message" required></textarea><br><br>
-	
-	  <button type="submit">Send</button>
-	</form>
+<div class="container">
+
+  <div id="site-header"></div>
+  <script src="header.js"></script>
+
+  <div class="content-container">
+
+    <p class="back"><a href="index.html">&larr; back to home</a></p>
+
+    <h1>contact</h1>
+    <p class="intro">Send me a message and I'll get back to you when I can.</p>
+
+    <div class="contact-form">
+      <!-- FORM MADE FROM FORMSPREE -->
+      <form id="contact-form" action="https://formspree.io/f/mnjwjlzw" method="POST">
+
+        <div class="field">
+          <label for="name">name</label>
+          <input type="text" id="name" name="name" autocomplete="name" required>
+        </div>
+
+        <div class="field">
+          <label for="email">email</label>
+          <input type="email" id="email" name="email" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="message">message</label>
+          <textarea id="message" name="message" required></textarea>
+        </div>
+
+        <!-- spam trap + email subject -->
+        <input type="text" name="_gotcha" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="hidden" name="_subject" value="New message from egon.td">
+
+        <button type="submit" id="send-btn">send</button>
+        <div id="form-status" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <!-- OPTIONAL: 88x31 buttons. Delete this block if you don't want it. -->
+    <!--
+    <div class="buttons">
+      <a href="https://example.com"><img src="buttons/one.gif" width="88" height="31" alt="One"></a>
+    </div>
+    -->
+
+  </div>
 </div>
+
+<script>
+  // Sends the form without leaving the page. If JS fails, the normal form post still works.
+  const form = document.getElementById("contact-form");
+  const statusEl = document.getElementById("form-status");
+  const btn = document.getElementById("send-btn");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    btn.disabled = true;
+    statusEl.className = "";
+    statusEl.textContent = "sending...";
+
+    try {
+      const res = await fetch(form.action, {
+        method: "POST",
+        body: new FormData(form),
+        headers: { "Accept": "application/json" }
+      });
+
+      if (res.ok) {
+        form.reset();
+        statusEl.className = "ok";
+        statusEl.textContent = "message sent, thank you!";
+      } else {
+        throw new Error("bad response");
+      }
+    } catch (err) {
+      statusEl.className = "err";
+      statusEl.textContent = "something went wrong, please try again.";
+    }
+
+    btn.disabled = false;
+  });
+</script>
 
 </body>
 </html>
+
