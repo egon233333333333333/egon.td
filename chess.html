@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://i.pinimg.com/736x/25/65/d1/2565d1c3b2f7141bfdcdca78154656e8.jpg" type="image/jpeg">
+  <title>egon.td | board</title>
+
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 16px;
+      line-height: 1.4;
+      background-color: #877360;
+      margin: 0;
+      padding: 0 8px 30px;
+      color: #000;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ===== HEADER (header.js uses these classes) ===== */
+    #header {
+      background-image: url("https://img.magnific.com/free-vector/abstract-grainy-background_474888-6925.jpg?semt=ais_hybrid&w=740&q=80");
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header-s {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .header-s a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .header-s a:hover {
+      color: #FFF073;
+      text-decoration: underline;
+    }
+
+    .title a {
+      color: #FFF073;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .subtitle a {
+      color: #F5E9C8;
+      font-family: "Courier New", monospace;
+      text-decoration: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    /* ===== MAIN BOX ===== */
+    .content-container {
+      border: 3px ridge #5A3825;
+      background-color: #EBE4E4;
+      padding: 20px 24px 28px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .content-container a:link    { color: #0000EE; text-decoration: underline; }
+    .content-container a:visited { color: #551A8B; }
+    .content-container a:hover   { color: #CC0000; }
+
+    .back {
+      font-family: "Courier New", monospace;
+      font-size: 0.85em;
+      margin: 0 0 18px;
+    }
+
+    /* ===== CHESS BOARD ===== */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      max-width: 640px;
+      margin: 0 auto;
+      border: 3px ridge #5A3825;
+      background: #5A3825;
+    }
+
+    .sq {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 1;
+      box-sizing: border-box;
+      padding: 4px;
+      overflow: hidden;
+      text-align: center;
+      font-size: 0.8em;
+      line-height: 1.15;
+      text-decoration: none;
+    }
+
+    .sq.light { background: #EBD9B4; color: #3b2a1a; }
+    .sq.dark  { background: #8a5f3c; color: #FFF8E7; }
+
+    /* links inside squares keep the square's own text color */
+    .content-container a.sq:link,
+    .content-container a.sq:visited {
+      text-decoration: none;
+    }
+
+    .content-container a.sq.light:link,
+    .content-container a.sq.light:visited { color: #3b2a1a; }
+
+    .content-container a.sq.dark:link,
+    .content-container a.sq.dark:visited  { color: #FFF8E7; }
+
+    .sq .label {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+    }
+
+    .sq.has-link:hover {
+      box-shadow: inset 0 0 0 3px #CC0000;
+    }
+
+    .sq.has-link:hover .label {
+      text-decoration: underline;
+    }
+
+    /* rank numbers down the a-file, file letters along the bottom row */
+    .coord {
+      position: absolute;
+      font-family: "Courier New", monospace;
+      font-size: 0.7em;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .coord.rank { top: 2px; left: 3px; }
+    .coord.file { bottom: 1px; right: 3px; }
+
+    @media (max-width: 520px) {
+      .content-container { padding: 14px 10px 20px; }
+      .sq { font-size: 0.6em; padding: 2px; }
+      .coord { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div id="site-header"></div>
+    <script src="header.js"></script>
+
+    <div class="content-container">
+
+      <p class="back"><a href="index.html">&larr; back to home</a></p>
+
+      <div id="board"></div>
+
+    </div>
+
+  </div>
+
+<script>
+/* =====================================================
+   PUT YOUR LINKS HERE
+
+   Each line is one square:
+     square: { label: "text shown in the square", url: "where it goes" },
+
+   Squares are named like a real chess board: a1 (bottom left)
+   to h8 (top right). The last line in the list shouldn't need a
+   special ending, every line just ends with a comma.
+
+   Examples (remove the // to use them):
+   ===================================================== */
+const squares = {
+  // a1: { label: "gallery",  url: "gallery.html" },
+  // e4: { label: "my blog",  url: "https://example.com" },
+  // h8: { label: "email me", url: "mailto:you@example.com" },
+};
+
+/* ===================================================== */
+
+const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const board = document.getElementById("board");
+
+for (let rank = 8; rank >= 1; rank--) {
+  FILES.forEach((file, fi) => {
+    const name = file + rank;
+    const info = squares[name];
+    const dark = (fi + rank) % 2 === 1;        // a1 is a dark square
+
+    const el = document.createElement(info ? "a" : "div");
+    el.className = "sq " + (dark ? "dark" : "light") + (info ? " has-link" : "");
+
+    if (info) {
+      el.href = info.url;
+
+      // web links open in a new tab, your own pages open in the same tab
+      if (/^https?:/i.test(info.url)) {
+        el.target = "_blank";
+        el.rel = "noopener noreferrer";
+      }
+
+      el.title = info.label;
+      el.setAttribute("aria-label", info.label + " (" + name + ")");
+
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = info.label;
+      el.appendChild(label);
+    }
+
+    if (fi === 0) {
+      const r = document.createElement("span");
+      r.className = "coord rank";
+      r.textContent = rank;
+      el.appendChild(r);
+    }
+
+    if (rank === 1) {
+      const f = document.createElement("span");
+      f.className = "coord file";
+      f.textContent = file;
+      el.appendChild(f);
+    }
+
+    board.appendChild(el);
+  });
+}
+</script>
+
+</body>
+</html>
+
