@@ -40,7 +40,7 @@
       <div class="header-links">
         <a href="works.html">about</a>
         <a href="works.html">videos</a>
-        <a href="guestbook.html">msg</a>
+        <a href="msg.html">msg</a>
       </div>
     </div>
   `;
